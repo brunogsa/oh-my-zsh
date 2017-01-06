@@ -11,6 +11,7 @@ ZSH_THEME="punctual"
 PUNCTUAL_TIMESTAMP_FORMAT="%a, %d %b %Y - %H:%M:%S";
 PUNCTUAL_SHOW_USER="false";
 PUNCTUAL_SHOW_HOSTNAME="false";
+PUNCTUAL_TIMESTAMP_COLOUR="yellow";
 
 # Uncomment the following line to use case-sensitive completion.
 # CASE_SENSITIVE="true"
@@ -83,3 +84,4 @@ export LANG=en_US.UTF-8
 # users are encouraged to define aliases within the ZSH_CUSTOM folder.
 # For a full list of active aliases, run `alias`.
 alias vim=nvim
+export FZF_CTRL_T_COMMAND='ag -g "" `git rev-parse --show-toplevel`'
