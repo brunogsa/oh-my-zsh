@@ -9,7 +9,7 @@
 # See https://github.com/robbyrussell/oh-my-zsh/wiki/Themes
 ZSH_THEME="punctual"
 PUNCTUAL_TIMESTAMP_FORMAT="%a, %d %b %Y - %H:%M:%S";
-PUNCTUAL_SHOW_USER="false";
+PUNCTUAL_SHOW_HOSTNAME="false";
 PUNCTUAL_TIMESTAMP_COLOUR="yellow";
 
 # Uncomment the following line to use case-sensitive completion.
