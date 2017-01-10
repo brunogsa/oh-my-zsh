@@ -32,7 +32,7 @@ HYPHEN_INSENSITIVE="true"
 # DISABLE_AUTO_TITLE="true"
 
 # Uncomment the following line to enable command auto-correction.
-ENABLE_CORRECTION="true"
+# ENABLE_CORRECTION="true"
 
 # Uncomment the following line to display red dots whilst waiting for completion.
 COMPLETION_WAITING_DOTS="true"
@@ -54,7 +54,7 @@ DISABLE_UNTRACKED_FILES_DIRTY="true"
 # Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(git colored-man-pages cp vi-mode node npm npm-run zsh-better-npm-completion fzf-zsh)
+plugins=(git colored-man-pages cp node npm npm-run zsh-better-npm-completion fzf-zsh)
 
 source $ZSH/oh-my-zsh.sh
 
@@ -83,4 +83,8 @@ export LANG=en_US.UTF-8
 # users are encouraged to define aliases within the ZSH_CUSTOM folder.
 # For a full list of active aliases, run `alias`.
 alias vim=nvim
+
 export FZF_CTRL_T_COMMAND='ag -g "" `git rev-parse --show-toplevel`'
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+
+alias postgres='psql postgres://admin:REFNOCLVPJANAKHO@aws-us-east-1-portal.3.dblayer.com:10450/eucportal_prod'
