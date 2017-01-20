@@ -19,6 +19,8 @@ PUNCTUAL_TIMESTAMP_COLOUR="yellow";
 # sensitive completion must be off. _ and - will be interchangeable.
 HYPHEN_INSENSITIVE="true"
 
+DISABLE_AUTO_TITLE="true"
+
 # Uncomment the following line to disable bi-weekly auto-update checks.
 # DISABLE_AUTO_UPDATE="true"
 
@@ -82,9 +84,11 @@ export LANG=en_US.UTF-8
 # plugins, and themes. Aliases can be placed here, though oh-my-zsh
 # users are encouraged to define aliases within the ZSH_CUSTOM folder.
 # For a full list of active aliases, run `alias`.
+alias curl='noglob curl'
+
 alias vim=nvim
 
 export FZF_CTRL_T_COMMAND='ag -g "" `git rev-parse --show-toplevel`'
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
-alias postgres='psql postgres://admin:REFNOCLVPJANAKHO@aws-us-east-1-portal.3.dblayer.com:10450/eucportal_prod'
+alias cd-gitroot='cd `git rev-parse --show-toplevel`'
