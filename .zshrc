@@ -92,3 +92,5 @@ export FZF_CTRL_T_COMMAND='ag -g "" `git rev-parse --show-toplevel`'
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
 alias cd-gitroot='cd `git rev-parse --show-toplevel`'
+
+source /etc/profile.d/rvm.sh
