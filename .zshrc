@@ -91,5 +91,3 @@ alias open='xdg-open'
 
 export FZF_CTRL_T_COMMAND='ag -g "" `git rev-parse --show-toplevel`'
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
-
-source /etc/profile.d/rvm.sh

@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 # Use my configs
 rm -f ~/.zshrc
@@ -15,6 +16,8 @@ rm -f ~/.oh-my-zsh/themes/*
 mv -f punctual.zsh-theme ~/.oh-my-zsh/themes/
 
 # Plugin
+sudo rm -fr ~/.oh-my-zsh/custom/plugins/*
+
 git clone https://github.com/akoenig/npm-run.plugin.zsh
 mv -f npm-run.plugin.zsh ~/.oh-my-zsh/custom/plugins/
 
