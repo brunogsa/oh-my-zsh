@@ -24,6 +24,8 @@ mv -f npm-run.plugin.zsh ~/.oh-my-zsh/custom/plugins/
 git clone https://github.com/lukechilds/zsh-better-npm-completion
 mv -f zsh-better-npm-completion ~/.oh-my-zsh/custom/plugins/
 
+sudo apt-get install silversearcher-ag -y
+
 git clone https://github.com/junegunn/fzf.git
 mv -f fzf ~/.oh-my-zsh/custom/plugins/
 ~/.oh-my-zsh/custom/plugins/fzf/install --bin
