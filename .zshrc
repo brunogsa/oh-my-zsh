@@ -88,6 +88,7 @@ alias curl='noglob curl'
 alias vim=nvim
 alias cd-gitroot='cd `git rev-parse --show-toplevel`'
 alias open='xdg-open'
+alias rg="rg --hidden --follow"
 
-export FZF_CTRL_T_COMMAND='ag -g "" `git rev-parse --show-toplevel`'
+export FZF_CTRL_T_COMMAND='rg --files `git rev-parse --show-toplevel | xargs realpath --relative-to="${PWD}"`'
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
