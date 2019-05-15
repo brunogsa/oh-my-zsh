@@ -84,7 +84,7 @@ export LANG=en_US.UTF-8
 # plugins, and themes. Aliases can be placed here, though oh-my-zsh
 # users are encouraged to define aliases within the ZSH_CUSTOM folder.
 # For a full list of active aliases, run `alias`.
-alias curl='noglob curl'
+alias curl='noglob curl --noproxy "*"'
 alias vim=nvim
 alias cd-gitroot='cd `git rev-parse --show-toplevel`'
 alias open='xdg-open'
