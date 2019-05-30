@@ -85,6 +85,7 @@ export LANG=en_US.UTF-8
 # users are encouraged to define aliases within the ZSH_CUSTOM folder.
 # For a full list of active aliases, run `alias`.
 alias curl='noglob curl --noproxy "*"'
+alias sudo='sudo '
 alias vim=nvim
 alias cd-gitroot='cd `git rev-parse --show-toplevel`'
 alias open='xdg-open'
