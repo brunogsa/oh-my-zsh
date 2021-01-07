@@ -18,9 +18,6 @@ mv -f punctual.zsh-theme ~/.oh-my-zsh/themes/
 # Plugin
 sudo rm -fr ~/.oh-my-zsh/custom/plugins/*
 
-git clone https://github.com/akoenig/npm-run.plugin.zsh
-mv -f npm-run.plugin.zsh ~/.oh-my-zsh/custom/plugins/
-
 git clone https://github.com/lukechilds/zsh-better-npm-completion
 mv -f zsh-better-npm-completion ~/.oh-my-zsh/custom/plugins/
 
