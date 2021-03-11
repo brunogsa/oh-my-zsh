@@ -12,7 +12,6 @@ sudo ln -s ~/oh-my-zsh/.zshrc /root/.zshrc
 
 # Themes
 wget https://raw.githubusercontent.com/dannynimmo/punctual-zsh-theme/v0.1.0/punctual.zsh-theme
-rm -f ~/.oh-my-zsh/themes/*
 mv -f punctual.zsh-theme ~/.oh-my-zsh/themes/
 
 # Plugin
