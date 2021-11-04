@@ -1,3 +1,6 @@
+# Enable the line below for profilling plugins
+# zmodload zsh/zprof
+
 # If you come from bash you might have to change your $PATH.
 # export PATH=$HOME/bin:/usr/local/bin:$PATH
 
@@ -11,6 +14,7 @@ ZSH_THEME="punctual"
 PUNCTUAL_TIMESTAMP_FORMAT="%a, %d %b %Y - %H:%M:%S";
 PUNCTUAL_SHOW_HOSTNAME="false";
 PUNCTUAL_TIMESTAMP_COLOUR="yellow";
+PUNCTUAL_SHOW_GIT="true";
 
 # Uncomment the following line to use case-sensitive completion.
 # CASE_SENSITIVE="true"
@@ -56,7 +60,7 @@ DISABLE_UNTRACKED_FILES_DIRTY="true"
 # Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(git colored-man-pages cp node npm zsh-better-npm-completion fzf-zsh)
+plugins=(colored-man-pages npm yarn zsh-better-npm-completion fzf-zsh)
 
 source $ZSH/oh-my-zsh.sh
 
@@ -79,6 +83,12 @@ export LANG=en_US.UTF-8
 
 # ssh
 # export SSH_KEY_PATH="~/.ssh/rsa_id"
+
+# Useful for profilling startup times
+zsh_profile_startup() {
+  shell=${1-$SHELL}
+  for i in $(seq 1 10); do /usr/bin/time $shell -i -c exit; done
+}
 
 # Set personal aliases, overriding those provided by oh-my-zsh libs,
 # plugins, and themes. Aliases can be placed here, though oh-my-zsh
