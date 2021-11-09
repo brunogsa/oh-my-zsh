@@ -1,11 +1,27 @@
-# Enable the line below for profilling plugins
+# Enable the line below for profilling
 # zmodload zsh/zprof
+
+# Paste the line below
+# PS4='+[%D{%T.%.}] %N:%i> ' zsh -x
+
+# Useful for profilling startup times
+# zsh_profile_startup() {
+#   shell=${1-$SHELL}
+#   for i in $(seq 1 10); do /usr/bin/time $shell -i -c exit; done
+# }
+
+# git() {
+#   local PS4='[%D{%T.%.}] %N:%i:'
+#   print -u2 -f '-> %s (%s)\n' ${funcstack:^funcfiletrace}
+#   set -o localoptions -o xtrace
+#   command git "$@"
+# }
 
 # If you come from bash you might have to change your $PATH.
 # export PATH=$HOME/bin:/usr/local/bin:$PATH
 
 # Path to your oh-my-zsh installation.
-  export ZSH="$HOME/.oh-my-zsh"
+export ZSH="$HOME/.oh-my-zsh"
 
 # Set name of the theme to load. Optionally, if you set this to "random"
 # it'll load a random theme each time that oh-my-zsh is loaded.
@@ -84,12 +100,6 @@ export LANG=en_US.UTF-8
 # ssh
 # export SSH_KEY_PATH="~/.ssh/rsa_id"
 
-# Useful for profilling startup times
-zsh_profile_startup() {
-  shell=${1-$SHELL}
-  for i in $(seq 1 10); do /usr/bin/time $shell -i -c exit; done
-}
-
 # Set personal aliases, overriding those provided by oh-my-zsh libs,
 # plugins, and themes. Aliases can be placed here, though oh-my-zsh
 # users are encouraged to define aliases within the ZSH_CUSTOM folder.
@@ -99,7 +109,7 @@ alias sudo='sudo '
 alias vim=nvim
 alias cd-gitroot='cd `git rev-parse --show-toplevel`'
 alias open='xdg-open'
-alias rg="rg --hidden --follow"
+alias rg="rg --hidden --follow -g '!*.git*'"
 
 export FZF_CTRL_T_COMMAND='rg --files `git rev-parse --show-toplevel | xargs realpath --relative-to="${PWD}"`'
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
