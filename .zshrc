@@ -100,6 +100,19 @@ export LANG=en_US.UTF-8
 # ssh
 # export SSH_KEY_PATH="~/.ssh/rsa_id"
 
+function meldSorted () {
+  fileA=$1
+  fileB=$2
+
+  sortedFileA=/tmp/sorted-$(basename $fileA)
+  sortedFileB=/tmp/sorted-$(basename $fileB)
+
+  sort $fileA > $sortedFileA
+  sort $fileB > $sortedFileB
+
+  meld $sortedFileA $sortedFileB
+}
+
 # Set personal aliases, overriding those provided by oh-my-zsh libs,
 # plugins, and themes. Aliases can be placed here, though oh-my-zsh
 # users are encouraged to define aliases within the ZSH_CUSTOM folder.
