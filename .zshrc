@@ -113,6 +113,14 @@ function meldSorted () {
   meld $sortedFileA $sortedFileB
 }
 
+function compileMermaid () {
+  mermaidFile=$1
+  fileName=$(echo "$mermaidFile" | cut -d '.' -f 1)
+
+  mmdc -i $mermaidFile -o ${fileName}.png --scale 4
+  convert -trim $fileName.png $fileName.png
+}
+
 # Set personal aliases, overriding those provided by oh-my-zsh libs,
 # plugins, and themes. Aliases can be placed here, though oh-my-zsh
 # users are encouraged to define aliases within the ZSH_CUSTOM folder.
@@ -126,3 +134,32 @@ alias rg="rg --hidden --follow -g '!*.git*'"
 
 export FZF_CTRL_T_COMMAND='rg --files `git rev-parse --show-toplevel | xargs realpath --relative-to="${PWD}"`'
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+
+export PYENV_ROOT="$HOME/.pyenv"
+export PATH="$PYENV_ROOT/bin:$PATH"
+export PYENV_SHELL=zsh
+
+source '/home/bruno.agostini/.pyenv/libexec/../completions/pyenv.zsh'
+command pyenv rehash 2>/dev/null
+
+pyenv() {
+  local command
+  command="${1:-}"
+  if [ "$#" -gt 0 ]; then
+    shift
+  fi
+
+  case "$command" in
+  rehash|shell)
+    eval "$(pyenv "sh-$command" "$@")"
+    ;;
+  *)
+    command pyenv "$command" "$@"
+    ;;
+  esac
+}
+
+export PATH="$HOME/.poetry/bin:$PATH"
+
+export POETRY_HTTP_BASIC_OLIST_USERNAME=37e744901b8b92a0103a3f0fecbba18e43e5883c919853b7
+export PIP_EXTRA_INDEX_URL=https://$POETRY_HTTP_BASIC_OLIST_USERNAME:@packagecloud.io/olist/v2/pypi/simple
