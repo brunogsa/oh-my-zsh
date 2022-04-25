@@ -160,6 +160,3 @@ pyenv() {
 }
 
 export PATH="$HOME/.poetry/bin:$PATH"
-
-export POETRY_HTTP_BASIC_OLIST_USERNAME=37e744901b8b92a0103a3f0fecbba18e43e5883c919853b7
-export PIP_EXTRA_INDEX_URL=https://$POETRY_HTTP_BASIC_OLIST_USERNAME:@packagecloud.io/olist/v2/pypi/simple
