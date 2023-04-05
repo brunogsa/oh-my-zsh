@@ -135,5 +135,8 @@ alias rg="rg --hidden --follow -g '!*.git*'"
 export FZF_CTRL_T_COMMAND='rg --files `git rev-parse --show-toplevel | xargs realpath --relative-to="${PWD}"`'
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
+# Add node global binaries to PATH
+export PATH="$PATH:/usr/local/bin"
+
 # Add RVM to PATH for scripting. Make sure this is the last PATH variable change.
 export PATH="$PATH:$HOME/.rvm/bin"
