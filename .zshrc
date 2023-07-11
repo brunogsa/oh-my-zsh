@@ -131,6 +131,7 @@ alias vim=nvim
 alias cd-gitroot='cd `git rev-parse --show-toplevel`'
 alias open='xdg-open'
 alias rg="rg --hidden --follow -g '!*.git*'"
+alias tree="tree -C -I '.git' -I 'node_modules'"
 
 export FZF_CTRL_T_COMMAND='rg --files `git rev-parse --show-toplevel | xargs realpath --relative-to="${PWD}"`'
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
