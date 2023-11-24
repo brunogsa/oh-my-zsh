@@ -129,7 +129,6 @@ alias curl='curl --noproxy "*"'
 alias sudo='sudo '
 alias vim=nvim
 alias cd-gitroot='cd `git rev-parse --show-toplevel`'
-alias open='xdg-open'
 alias rg="rg --hidden --follow -g '!*.git*'"
 alias tree="tree -C -I '.git' -I 'node_modules'"
 
