@@ -5,6 +5,8 @@ set -e
 brew install coreutils
 
 ln -sf ~/oh-my-zsh/.zshrc ~/.zshrc
+sudo mkdir -p ~/.oh-my-zsh /Users/admin
+sudo mkdir -p /Users/admin
 sudo ln -sf ~/.oh-my-zsh /Users/admin/.oh-my-zsh
 sudo ln -sf ~/oh-my-zsh/.zshrc /Users/admin/.zshrc
 
