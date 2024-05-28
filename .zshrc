@@ -121,6 +121,19 @@ function compileMermaid () {
   convert -trim $fileName.png $fileName.png
 }
 
+function compileGanttMermaid () {
+  mermaidFile=$1
+
+  width=$2
+  if [ -z "$width" ]; then
+    width=2048
+  fi
+
+  fileName=$(echo "$mermaidFile" | cut -d '.' -f 1)
+
+  mmdc -i $mermaidFile -o ${fileName}.svg --scale 4 --width $width
+}
+
 # Set personal aliases, overriding those provided by oh-my-zsh libs,
 # plugins, and themes. Aliases can be placed here, though oh-my-zsh
 # users are encouraged to define aliases within the ZSH_CUSTOM folder.
