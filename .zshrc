@@ -118,7 +118,7 @@ function compileMermaid () {
   fileName=$(echo "$mermaidFile" | cut -d '.' -f 1)
 
   mmdc -i $mermaidFile -o ${fileName}.png --scale 4
-  convert -trim $fileName.png $fileName.png
+  # convert -trim $fileName.png $fileName.png
 }
 
 function compileGanttMermaid () {
