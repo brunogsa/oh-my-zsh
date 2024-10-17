@@ -134,6 +134,14 @@ function compileGanttMermaid () {
   mmdc -i $mermaidFile -o ${fileName}.svg --scale 4 --width $width
 }
 
+function generateSchemaFromJson () {
+  inputJson=$1
+  fileName=$(basename "$inputJson" .json)
+
+  npx quicktype --src "$(pwd)/$1" --src-lang json --out "$(pwd)/${fileName}.schema.json" --lang schema
+  npx @openapi-contrib/json-schema-to-openapi-schema convert "$(pwd)/${fileName}.schema.json" | jq '.' > "$(pwd)/${fileName}.openapi.json"
+}
+
 # Set personal aliases, overriding those provided by oh-my-zsh libs,
 # plugins, and themes. Aliases can be placed here, though oh-my-zsh
 # users are encouraged to define aliases within the ZSH_CUSTOM folder.
