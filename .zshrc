@@ -149,6 +149,7 @@ function generateSchemaFromJson () {
 alias curl='curl --noproxy "*"'
 alias sudo='sudo '
 alias vim=nvim
+alias aider='aider --no-verify-ssl --show-diffs --subtree-only --no-auto-commits --analytics --vim ask'
 alias cd-gitroot='cd `git rev-parse --show-toplevel`'
 alias rg="rg --hidden --follow -g '!*.git*'"
 alias tree="tree -C -I '.git' -I 'node_modules'"
@@ -162,3 +163,14 @@ export PATH="$PATH:/usr/local/bin"
 
 # Add RVM to PATH for scripting. Make sure this is the last PATH variable change.
 export PATH="$PATH:$HOME/.rvm/bin"
+
+# Created by `pipx` on 2024-09-18 21:03:30
+export PATH="$PATH:/Users/brunoagostini/.local/bin"
+
+
+export NODE_TLS_REJECT_UNAUTHORIZED=0
+export PYTHONHTTPSVERIFY=0
+
+export AIDER_EDITOR=nvim
+export EDITOR=nvim
+export VISUAL=nvim
