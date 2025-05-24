@@ -142,6 +142,59 @@ function generateSchemaFromJson () {
   npx @openapi-contrib/json-schema-to-openapi-schema convert "$(pwd)/${fileName}.schema.json" | jq '.' > "$(pwd)/${fileName}.openapi.json"
 }
 
+function sortFieldNamesInJson () {
+  jq 'map(to_entries | sort_by(.key) | from_entries)'
+}
+
+function sortArrayElementsInJsonByField () {
+  fieldName=$1
+
+  jq --arg field "$fieldName" '
+    (map(select(has($field))) | sort_by(.[$field])) + 
+    (map(select(has($field) | not)))
+  '
+}
+
+function searchAndReplaceViaNvim() {
+  local pattern="$1"
+  local replace="$2"
+
+  if [ -z "$pattern" ] || [ -z "$replace" ]; then
+    echo "Usage: vimSearchAndReplace <search_pattern> <replace_pattern>"
+    return 1
+  fi
+
+  # Use the 'rg' alias (assumes it already filters out large folders)
+  local files
+  files=$(rg --files-with-matches "$pattern" | sort -u)
+
+  if [ -z "$files" ]; then
+    echo "No matches found for '$pattern'"
+    return 1
+  fi
+
+  echo "Found files:"
+  echo "$files"
+  echo
+
+  # Use /dev/tty for prompts to avoid stdin conflicts
+  while IFS= read -r file; do
+    local bold_file="\033[1m$file\033[0m"
+    echo -ne "Open $bold_file in Neovim for search & replace? (y/n/q): " > /dev/tty
+    read -r choice < /dev/tty
+    choice=${choice:-y}  # default to 'y'
+
+    if [[ "$choice" == "q" ]]; then
+      echo "Quit!"
+      return 0
+    elif [[ "$choice" == "n" ]]; then
+      echo "Skipping $file."
+    else
+      nvim +"%s/$pattern/$replace/gc" -- "$file"
+    fi
+  done <<< "$files"
+}
+
 # Set personal aliases, overriding those provided by oh-my-zsh libs,
 # plugins, and themes. Aliases can be placed here, though oh-my-zsh
 # users are encouraged to define aliases within the ZSH_CUSTOM folder.
@@ -149,9 +202,9 @@ function generateSchemaFromJson () {
 alias curl='curl --noproxy "*"'
 alias sudo='sudo '
 alias vim=nvim
-alias aider='aider --no-verify-ssl --show-diffs --subtree-only --no-auto-commits --analytics --vim ask'
+alias aider='aider --no-verify-ssl --show-diffs --subtree-only --no-auto-commits --analytics --editor nvim --code-theme monokai --dark-mode --architect'
 alias cd-gitroot='cd `git rev-parse --show-toplevel`'
-alias rg="rg --hidden --follow -g '!*.git*'"
+alias rg="rg --hidden --follow -g '!.git/*' -g '!node_modules/*' -g '!vendor/*' -g '!dist/*' -g '!build/*' -g '!.next/*' -g '!out/*' -g '!coverage/*' -g '!.cache/*'"
 alias tree="tree -C -I '.git' -I 'node_modules'"
 alias cdh="cd ~"
 
