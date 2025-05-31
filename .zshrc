@@ -207,6 +207,12 @@ alias cd-gitroot='cd `git rev-parse --show-toplevel`'
 alias rg="rg --hidden --follow -g '!.git/*' -g '!node_modules/*' -g '!vendor/*' -g '!dist/*' -g '!build/*' -g '!.next/*' -g '!out/*' -g '!coverage/*' -g '!.cache/*'"
 alias tree="tree -C -I '.git' -I 'node_modules'"
 alias cdh="cd ~"
+#
+# Check if copyq exists in PATH
+if which copyq &>/dev/null; then
+else
+  alias copyq="/Applications/CopyQ.app/Contents/MacOS/CopyQ"
+fi
 
 export FZF_CTRL_T_COMMAND='rg --files `git rev-parse --show-toplevel | xargs realpath --relative-to="${PWD}"`'
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
