@@ -10,6 +10,9 @@ sudo mkdir -p /Users/admin
 sudo ln -sf ~/.oh-my-zsh /Users/admin/.oh-my-zsh
 sudo ln -sf ~/oh-my-zsh/.zshrc /Users/admin/.zshrc
 
+touch ~/.secrets.sh
+touch ~/.temporary-global-envs.sh
+
 # Themes
 wget https://raw.githubusercontent.com/dannynimmo/punctual-zsh-theme/v0.1.0/punctual.zsh-theme
 mv -f punctual.zsh-theme ~/.oh-my-zsh/themes/

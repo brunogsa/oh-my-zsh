@@ -39,8 +39,6 @@ PUNCTUAL_SHOW_GIT="true";
 # sensitive completion must be off. _ and - will be interchangeable.
 HYPHEN_INSENSITIVE="true"
 
-DISABLE_AUTO_TITLE="true"
-
 # Uncomment the following line to disable bi-weekly auto-update checks.
 # DISABLE_AUTO_UPDATE="true"
 
@@ -51,7 +49,7 @@ DISABLE_AUTO_TITLE="true"
 # DISABLE_LS_COLORS="true"
 
 # Uncomment the following line to disable auto-setting terminal title.
-# DISABLE_AUTO_TITLE="true"
+DISABLE_AUTO_TITLE="true"
 
 # Uncomment the following line to enable command auto-correction.
 # ENABLE_CORRECTION="true"
@@ -100,19 +98,6 @@ export LANG=en_US.UTF-8
 # ssh
 # export SSH_KEY_PATH="~/.ssh/rsa_id"
 
-function meldSorted () {
-  fileA=$1
-  fileB=$2
-
-  sortedFileA=/tmp/sorted-$(basename $fileA)
-  sortedFileB=/tmp/sorted-$(basename $fileB)
-
-  sort $fileA > $sortedFileA
-  sort $fileB > $sortedFileB
-
-  meld $sortedFileA $sortedFileB
-}
-
 function compileMermaid () {
   mermaidFile=$1
   fileName=$(echo "$mermaidFile" | cut -d '.' -f 1)
@@ -153,6 +138,19 @@ function sortArrayElementsInJsonByField () {
     (map(select(has($field))) | sort_by(.[$field])) + 
     (map(select(has($field) | not)))
   '
+}
+
+function meldSorted () {
+  fileA=$1
+  fileB=$2
+
+  sortedFileA=/tmp/sorted-$(basename $fileA)
+  sortedFileB=/tmp/sorted-$(basename $fileB)
+
+  sort $fileA > $sortedFileA
+  sort $fileB > $sortedFileB
+
+  meld $sortedFileA $sortedFileB
 }
 
 function searchAndReplaceViaNvim() {
@@ -231,12 +229,13 @@ alias tree="tree -C -I '.git' -I 'node_modules'"
 alias cdh="cd ~"
 #
 # Check if copyq exists in PATH
-if which copyq &>/dev/null; then
-else
+if ! which copyq &>/dev/null; then
   alias copyq="/Applications/CopyQ.app/Contents/MacOS/CopyQ"
 fi
 
-export FZF_CTRL_T_COMMAND='rg --files `git rev-parse --show-toplevel | xargs realpath --relative-to="${PWD}"`'
+if git rev-parse --show-toplevel &>/dev/null; then
+  export FZF_CTRL_T_COMMAND='rg --files `git rev-parse --show-toplevel | xargs realpath --relative-to="${PWD}"`'
+fi
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
 # Add node global binaries to PATH
@@ -248,10 +247,13 @@ export PATH="$PATH:$HOME/.rvm/bin"
 # Created by `pipx` on 2024-09-18 21:03:30
 export PATH="$PATH:/Users/brunoagostini/.local/bin"
 
-
-export NODE_TLS_REJECT_UNAUTHORIZED=0
+# export NODE_TLS_REJECT_UNAUTHORIZED=0
 export PYTHONHTTPSVERIFY=0
 
 export AIDER_EDITOR=nvim
 export EDITOR=nvim
 export VISUAL=nvim
+
+source ~/.temporary-global-envs.sh
+source ~/.secrets.sh
+
