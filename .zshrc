@@ -98,67 +98,71 @@ export LANG=en_US.UTF-8
 # ssh
 # export SSH_KEY_PATH="~/.ssh/rsa_id"
 
-function compileMermaid () {
-  mermaidFile=$1
-  fileName=$(echo "$mermaidFile" | cut -d '.' -f 1)
-
-  mmdc -i $mermaidFile -o ${fileName}.png --scale 4
-  # convert -trim $fileName.png $fileName.png
-}
-
-function compileGanttMermaid () {
-  mermaidFile=$1
-
-  width=$2
-  if [ -z "$width" ]; then
-    width=2048
+function compile-mermaid () {
+  if [ -z "$1" ]; then
+    echo "Usage: compile-mermaid <mermaid_file>"
+    return 1
   fi
 
+  mermaidFile="$1"
   fileName=$(echo "$mermaidFile" | cut -d '.' -f 1)
 
-  mmdc -i $mermaidFile -o ${fileName}.svg --scale 4 --width $width
+  mmdc -i "$mermaidFile" -o "${fileName}.png" --scale 4
+  # convert -trim "$fileName.png" "$fileName.png"
 }
 
-function generateSchemaFromJson () {
-  inputJson=$1
+function compile-gantt-mermaid () {
+  if [ -z "$1" ]; then
+    echo "Usage: compile-gantt-mermaid <mermaid_file> [width]"
+    return 1
+  fi
+
+  mermaidFile="$1"
+  width="${2:-2048}"
+
+  fileName=$(echo "$mermaidFile" | cut -d '.' -f 1)
+
+  mmdc -i "$mermaidFile" -o "${fileName}.svg" --scale 4 --width "$width"
+}
+
+function gen-schema-from-json () {
+  if [ -z "$1" ]; then
+    echo "Usage: gen-schema-from-json <input_json_file>"
+    return 1
+  fi
+
+  inputJson="$1"
   fileName=$(basename "$inputJson" .json)
 
-  npx quicktype --src "$(pwd)/$1" --src-lang json --out "$(pwd)/${fileName}.schema.json" --lang schema
+  npx quicktype --src "$(pwd)/$inputJson" --src-lang json --out "$(pwd)/${fileName}.schema.json" --lang schema
   npx @openapi-contrib/json-schema-to-openapi-schema convert "$(pwd)/${fileName}.schema.json" | jq '.' > "$(pwd)/${fileName}.openapi.json"
 }
 
-function sortFieldNamesInJson () {
-  jq 'map(to_entries | sort_by(.key) | from_entries)'
+function diff-sorted-jsons () {
+  if [ -z "$1" ] || [ -z "$2" ]; then
+    echo "Usage: diff-sorted-json <fileA> <fileB> [field1,field2,...]"
+    return 1
+  fi
+
+  local fileA="$1"
+  local fileB="$2"
+  local fields="$3"
+
+  local sortedFileA="/tmp/sorted-$(basename "$fileA")"
+  local sortedFileB="/tmp/sorted-$(basename "$fileB")"
+
+  ~/oh-my-zsh/json-deep-sort.js "$fileA" "$fields" > "$sortedFileA"
+  ~/oh-my-zsh/json-deep-sort.js "$fileB" "$fields" > "$sortedFileB"
+
+  meld "$sortedFileA" "$sortedFileB"
 }
 
-function sortArrayElementsInJsonByField () {
-  fieldName=$1
-
-  jq --arg field "$fieldName" '
-    (map(select(has($field))) | sort_by(.[$field])) + 
-    (map(select(has($field) | not)))
-  '
-}
-
-function meldSorted () {
-  fileA=$1
-  fileB=$2
-
-  sortedFileA=/tmp/sorted-$(basename $fileA)
-  sortedFileB=/tmp/sorted-$(basename $fileB)
-
-  sort $fileA > $sortedFileA
-  sort $fileB > $sortedFileB
-
-  meld $sortedFileA $sortedFileB
-}
-
-function searchAndReplaceViaNvim() {
+function search-replace-vim() {
   local pattern="$1"
   local replace="$2"
 
   if [ -z "$pattern" ] || [ -z "$replace" ]; then
-    echo "Usage: vimSearchAndReplace <search_pattern> <replace_pattern>"
+    echo "Usage: search-replace-vim <search_pattern> <replace_pattern>"
     return 1
   fi
 
@@ -193,26 +197,26 @@ function searchAndReplaceViaNvim() {
   done <<< "$files"
 }
 
-function nodeDebugReminder() {
-  echo "🔥 Node Debugger Quick Steps 🔥"
+function node-debug-reminder() {
+  echo "Node Debugger Quick Steps"
   echo
-  echo "✅ 1) Add 'debugger;' statements in your test file"
-  echo "✅ 2) In one terminal, run:"
-  echo "   node --inspect-brk ./node_modules/.bin/jest [tests/myFeature.test.js]"
+  echo "1) Add 'debugger;' statements in your test file"
+  echo "2) In one terminal, run:"
+  echo "node --inspect-brk ./node_modules/.bin/jest [tests/myFeature.test.js]"
   echo
-  echo "✅ 3) In another terminal, attach the debugger with:"
-  echo "   node inspect localhost:9229"
+  echo "3) In another terminal, attach the debugger with:"
+  echo "node inspect localhost:9229"
   echo
-  echo "✅ 4) Builtin Debugger Commands:"
-  echo "   c      – continue"
-  echo "   n      – step over"
-  echo "   s      – step into"
-  echo "   o      – step out"
-  echo "   repl   – enter full REPL mode (like a mini Node console)"
-  echo "   restart – restart the debug session"
-  echo "   watch('someVar') – watch a variable"
+  echo "4) Builtin Debugger Commands:"
+  echo "c                – continue"
+  echo "n                – step over"
+  echo "s                – step into"
+  echo "o                – step out"
+  echo "repl             – enter full REPL mode (like a mini Node console)"
+  echo "restart          – restart the debug session"
+  echo "watch('someVar') – watch a variable"
   echo
-  echo "🪄 Enjoy your debugging session! 🚀"
+  echo "Enjoy your debugging session!"
 }
 
 # Set personal aliases, overriding those provided by oh-my-zsh libs,
@@ -246,9 +250,6 @@ export PATH="$PATH:$HOME/.rvm/bin"
 
 # Created by `pipx` on 2024-09-18 21:03:30
 export PATH="$PATH:/Users/brunoagostini/.local/bin"
-
-# export NODE_TLS_REJECT_UNAUTHORIZED=0
-export PYTHONHTTPSVERIFY=0
 
 export AIDER_EDITOR=nvim
 export EDITOR=nvim
