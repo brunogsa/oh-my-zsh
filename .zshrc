@@ -138,6 +138,24 @@ function gen-schema-from-json () {
   npx @openapi-contrib/json-schema-to-openapi-schema convert "$(pwd)/${fileName}.schema.json" | jq '.' > "$(pwd)/${fileName}.openapi.json"
 }
 
+function diff-sorted-txt () {
+  if [ -z "$1" ] || [ -z "$2" ]; then
+    echo "Usage: diff-sorted-txt <fileA> <fileB>"
+    return 1
+  fi
+
+  local fileA="$1"
+  local fileB="$2"
+
+  local sortedFileA="/tmp/sorted-$(basename "$fileA")"
+  local sortedFileB="/tmp/sorted-$(basename "$fileB")"
+
+  sort "$fileA" > "$sortedFileA"
+  sort "$fileB" > "$sortedFileB"
+
+  meld "$sortedFileA" "$sortedFileB"
+}
+
 function diff-sorted-jsons () {
   if [ -z "$1" ] || [ -z "$2" ]; then
     echo "Usage: diff-sorted-json <fileA> <fileB> [field1,field2,...]"
