@@ -237,6 +237,30 @@ function node-debug-reminder() {
   echo "Enjoy your debugging session!"
 }
 
+function ai-changelog() {
+  if [[ -t 0 ]] || [[ "$1" == "-h" || "$1" == "--help" ]]; then
+    echo "Usage:"
+    echo "  ai-changelog [-h | --help]"
+    echo "  git diff HEAD~1 | ai-changelog"
+    echo ""
+    echo "Description:"
+    echo "  Generates a changelog summary in bullet points from a git diff"
+    echo "  using Claude Sonnet (via Claude CLI)"
+    echo ""
+    echo "Examples:"
+    echo "  git diff HEAD~1 | ai-changelog"
+    echo "  git diff | ai-changelog | pbcopy"
+    return
+  fi
+
+  local diff
+  diff=$(cat)
+
+  claude --print --output-format text "Generate a concise changelog in bullet points (with -) from this git diff:
+
+  $diff"
+}
+
 # Set personal aliases, overriding those provided by oh-my-zsh libs,
 # plugins, and themes. Aliases can be placed here, though oh-my-zsh
 # users are encouraged to define aliases within the ZSH_CUSTOM folder.
@@ -244,7 +268,8 @@ function node-debug-reminder() {
 alias curl='curl --noproxy "*"'
 alias sudo='sudo '
 alias vim=nvim
-alias aider='aider --no-verify-ssl --show-diffs --subtree-only --no-auto-commits --analytics --editor nvim --code-theme monokai --dark-mode --architect'
+alias aider='aider --no-verify-ssl'
+alias claude='claude --model claude-3-5-sonnet-20240620 --verbose'
 alias cd-gitroot='cd `git rev-parse --show-toplevel`'
 alias rg="rg --hidden --follow -g '!.git/*' -g '!node_modules/*' -g '!vendor/*' -g '!dist/*' -g '!build/*' -g '!.next/*' -g '!out/*' -g '!coverage/*' -g '!.cache/*'"
 alias tree="tree -C -I '.git' -I 'node_modules'"
