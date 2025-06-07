@@ -288,7 +288,7 @@ function ai-changelog() {
 function ai-git-commit() {
   if [[ "$1" == "-h" || "$1" == "--help" ]]; then
     echo "Usage:"
-    echo "  ai-git-commit"
+    echo "  ai-git-commit [--no-verify]"
     echo ""
     echo "Description:"
     echo "  Uses GPT-4o to generate a commit message from staged changes,"
@@ -296,7 +296,12 @@ function ai-git-commit() {
     return
   fi
 
-  # Capture staged diff (only added/modified files)
+  local no_verify=""
+  if [[ "$1" == "--no-verify" ]]; then
+    no_verify="--no-verify"
+  fi
+
+  # Capture staged diff
   local diff
   diff=$(git diff --cached)
 
@@ -305,20 +310,15 @@ function ai-git-commit() {
     return 1
   fi
 
-  # Prompt
   local prompt="Write a clear and concise Git commit message (max 72 characters in the subject line), based on the following staged diff. Use imperative tone and follow conventional commit style if appropriate.
 
   $diff"
 
-  # Generate commit message
   local message
   message=$(openai-request "$prompt")
 
-  # Commit using generated message
-  git commit -m "$message" || return 1
-
-  # Open commit for optional manual edit
-  git commit --amend
+  git commit $no_verify -m "$message" || return 1
+  git commit --amend $no_verify
 }
 
 # Set personal aliases, overriding those provided by oh-my-zsh libs,
