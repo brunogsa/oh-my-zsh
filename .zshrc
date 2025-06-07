@@ -239,21 +239,17 @@ function node-debug-reminder() {
 
 function openai-request() {
   local prompt="$1"
-  local input
-  input=$(cat)
 
   local json
   json=$(jq -n \
     --arg model "gpt-4o" \
     --arg temp "0.2" \
     --arg prompt "$prompt" \
-    --arg input "$input" \
       '{
         model: $model,
         temperature: ($temp | tonumber),
         messages: [
-          { role: "system", content: $prompt },
-          { role: "user", content: $input }
+          { role: "system", content: $prompt }
         ]
       }'
   )
@@ -287,6 +283,42 @@ function ai-changelog() {
   $diff"
 
   openai-request "$prompt"
+}
+
+function ai-git-commit() {
+  if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+    echo "Usage:"
+    echo "  ai-git-commit"
+    echo ""
+    echo "Description:"
+    echo "  Uses GPT-4o to generate a commit message from staged changes,"
+    echo "  then commits and opens 'git commit --amend' to let you edit manually."
+    return
+  fi
+
+  # Capture staged diff (only added/modified files)
+  local diff
+  diff=$(git diff --cached)
+
+  if [[ -z "$diff" ]]; then
+    echo "No staged changes found. Use 'git add' first."
+    return 1
+  fi
+
+  # Prompt
+  local prompt="Write a clear and concise Git commit message (max 72 characters in the subject line), based on the following staged diff. Use imperative tone and follow conventional commit style if appropriate.
+
+  $diff"
+
+  # Generate commit message
+  local message
+  message=$(openai-request "$prompt")
+
+  # Commit using generated message
+  git commit -m "$message" || return 1
+
+  # Open commit for optional manual edit
+  git commit --amend
 }
 
 # Set personal aliases, overriding those provided by oh-my-zsh libs,
