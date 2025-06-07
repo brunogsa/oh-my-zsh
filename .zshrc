@@ -237,6 +237,37 @@ function node-debug-reminder() {
   echo "Enjoy your debugging session!"
 }
 
+function openai-request() {
+  local prompt="$1"
+  local input
+  input=$(cat)
+
+  local json
+  json=$(jq -n \
+    --arg model "gpt-4o" \
+    --arg temp "0.2" \
+    --arg prompt "$prompt" \
+    --arg input "$input" \
+      '{
+        model: $model,
+        temperature: ($temp | tonumber),
+        messages: [
+          { role: "system", content: $prompt },
+          { role: "user", content: $input }
+        ]
+      }'
+  )
+
+  local response
+  response=$(curl -s https://api.openai.com/v1/chat/completions \
+    -H "Authorization: Bearer $OPENAI_API_KEY" \
+    -H "Content-Type: application/json" \
+    -d "$json"
+  )
+
+  jq -r '.choices[0].message.content' <<< "$response"
+}
+
 function ai-changelog() {
   if [[ -t 0 ]] || [[ "$1" == "-h" || "$1" == "--help" ]]; then
     echo "Usage:"
@@ -244,136 +275,18 @@ function ai-changelog() {
     echo "  git diff HEAD~1 | ai-changelog"
     echo ""
     echo "Description:"
-    echo "  Generates a changelog summary in bullet points from a git diff"
-    echo "  using Claude Sonnet (via Claude CLI)"
-    echo ""
-    echo "Examples:"
-    echo "  git diff HEAD~1 | ai-changelog"
-    echo "  git diff | ai-changelog | pbcopy"
+    echo "  Generates a changelog summary in bullet points from a git diff using GPT-4o"
     return
   fi
 
   local diff
   diff=$(cat)
 
-  claude --print --output-format text "Generate a concise changelog in bullet points (with -) from this git diff:
+  local prompt="Summarize the following git diff into concise bullet points:
 
   $diff"
-}
 
-function ai-explain() {
-  set -e
-
-  local SESSION_FILE="$HOME/.ai-session-id"
-  local TMP_DIR="/tmp/ai"
-  mkdir -p "$TMP_DIR"
-
-  local prompt=""
-  local files=()
-  local new_session=false
-  local session_id=""
-
-  print_usage() {
-    cat <<< "Usage: ai-explain [-h | --help] [-n | --new-session] [-s | --session-id ID] [-f | --files FILES...] [-p | --prompt PROMPT]"
-    cat <<< ""
-    cat <<< "Options:"
-    cat <<< "  -h, --help               Show this help message"
-    cat <<< "  -n, --new-session        Start a new Claude Sonnet session and store its session-id"
-    cat <<< "  -s, --session-id ID      Use the specified session-id instead of the last saved one"
-    cat <<< "  -f, --files FILES        Provide a list of files to include in the explanation"
-    cat <<< "  -p, --prompt PROMPT      Provide an additional prompt for Claude and Aider context"
-  }
-
-  while [[ $# -gt 0 ]]; do
-    case "$1" in
-      -h|--help)
-        print_usage
-        return 0
-        ;;
-      -n|--new-session)
-        new_session=true
-        shift
-        ;;
-      -s|--session-id)
-        session_id="$2"
-        shift 2
-        ;;
-      -f|--files)
-        shift
-        while [[ $# -gt 0 && ! "$1" =~ ^- ]]; do
-          files+=("$1")
-          shift
-        done
-        ;;
-      -p|--prompt)
-        prompt="$2"
-        shift 2
-        ;;
-      *)
-        echo "Unknown option: $1"
-        print_usage
-        return 1
-        ;;
-    esac
-  done
-
-  if $new_session; then
-    session_id="session-$(date +%s)"
-  elif [[ -f "$SESSION_FILE" ]]; then
-    session_id=$(cat "$SESSION_FILE")
-  fi
-  echo "$session_id" > "$SESSION_FILE"
-
-  if [[ ${#files[@]} -eq 0 ]]; then
-    files=(".")
-  fi
-
-  local file_list=$(printf "%s\n" "${files[@]}")
-  local prompt_text="Explain the following codebase with these files:
-
-  ${file_list}
-
-  Additional prompt:
-  $prompt
-
-  Respond in Markdown with the following sections:
-  1. Summary (bullets with -, merged responses from Aider and Claude Code)
-  2. Full Explanation (merged responses from Aider and Claude Code)
-  3. Claude Code explanation
-  4. Aider explanation
-
-  Feel free to ask for more context if needed. If more files are needed, suggest:
-  \$ ai-explain [same-options] [new-files-incremented]
-  If files should be removed to avoid hallucination, suggest:
-  \$ ai-explain [same-options] [new-files-decremented]
-  "
-
-  local output_file="$TMP_DIR/$session_id.md"
-
-  echo "$prompt_text" > $output_file
-  echo "" >> $output_file
-
-  echo "Running Claude..."
-  claude --session "$session_id" --output-format text --print "$prompt_text" >> "$output_file"
-
-  {
-    echo ""
-    echo "---"
-    echo "Files included:"
-    echo ""
-    for file in "${files[@]}"; do
-      echo "- $file"
-    done
-    if [[ -n "$prompt" ]]; then
-      echo ""
-      echo "---"
-      echo "Extra prompt:"
-      echo ""
-      echo "$prompt"
-    fi
-  } >> "$output_file"
-
-  nvim "$output_file"
+  openai-request "$prompt"
 }
 
 # Set personal aliases, overriding those provided by oh-my-zsh libs,
@@ -383,8 +296,8 @@ function ai-explain() {
 alias curl='curl --noproxy "*"'
 alias sudo='sudo '
 alias vim=nvim
-alias aider='aider --no-verify-ssl'
-alias claude='claude --model claude-3-5-sonnet-20240620 --verbose'
+alias aider='aider --no-verify-ssl --no-auto-commits --vim --pretty --code-theme monokai --watch-files --model 4o'
+alias claude='claude --verbose'
 alias cd-gitroot='cd `git rev-parse --show-toplevel`'
 alias rg="rg --hidden --follow -g '!.git/*' -g '!node_modules/*' -g '!vendor/*' -g '!dist/*' -g '!build/*' -g '!.next/*' -g '!out/*' -g '!coverage/*' -g '!.cache/*'"
 alias tree="tree -C -I '.git' -I 'node_modules'"
@@ -415,4 +328,3 @@ export VISUAL=nvim
 
 source ~/.temporary-global-envs.sh
 source ~/.secrets.sh
-
