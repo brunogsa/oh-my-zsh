@@ -292,7 +292,7 @@ function ai-git-commit() {
     echo ""
     echo "Description:"
     echo "  Uses GPT-4o to generate a commit message from staged changes,"
-    echo "  then commits and opens 'git commit --amend' to let you edit manually."
+    echo "  then opens your editor with the message pre-filled before committing."
     return
   fi
 
@@ -301,7 +301,6 @@ function ai-git-commit() {
     no_verify="--no-verify"
   fi
 
-  # Capture staged diff
   local diff
   diff=$(git diff --cached)
 
@@ -317,8 +316,16 @@ function ai-git-commit() {
   local message
   message=$(openai-request "$prompt")
 
-  git commit $no_verify -m "$message" || return 1
-  git commit --amend $no_verify
+  # Write message to temp file
+  local msgfile
+  msgfile=$(mktemp)
+  echo "$message" > "$msgfile"
+
+  # Open editor with pre-filled message before committing
+  git commit $no_verify --edit -F "$msgfile"
+
+  # Clean up temp file
+  rm -f "$msgfile"
 }
 
 # Set personal aliases, overriding those provided by oh-my-zsh libs,
