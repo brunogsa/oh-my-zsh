@@ -335,10 +335,10 @@ function ai-git-commit() {
 alias curl='curl --noproxy "*"'
 alias sudo='sudo '
 alias vim=nvim
-alias aider='aider --no-verify-ssl --no-auto-commits --add-coauthor false --vim --pretty --code-theme monokai --watch-files --model 4o'
+alias aider='aider --no-verify-ssl --no-auto-commits --no-attribute-author --no-attribute-committer --no-attribute-commit-message-author --no-attribute-commit-message-committer --no-attribute-co-authored-by --stream --subtree-only --show-diffs --editor nvim --vim --pretty --code-theme monokai --watch-files --architect --model o4-mini'
 alias claude='claude --verbose'
 alias cd-gitroot='cd `git rev-parse --show-toplevel`'
-alias rg="rg --hidden --follow -g '!.git/*' -g '!node_modules/*' -g '!vendor/*' -g '!dist/*' -g '!build/*' -g '!.next/*' -g '!out/*' -g '!coverage/*' -g '!.cache/*'"
+alias rg="rg --hidden --follow -g '!html/*' -g '!.git/*' -g '!node_modules/*' -g '!vendor/*' -g '!dist/*' -g '!build/*' -g '!.next/*' -g '!out/*' -g '!coverage/*' -g '!.cache/*'"
 alias tree="tree -C -I '.git' -I 'node_modules'"
 alias cdh="cd ~"
 #
