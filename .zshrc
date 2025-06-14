@@ -328,6 +328,7 @@ function ai-git-commit() {
   rm -f "$msgfile"
 }
 
+
 # Set personal aliases, overriding those provided by oh-my-zsh libs,
 # plugins, and themes. Aliases can be placed here, though oh-my-zsh
 # users are encouraged to define aliases within the ZSH_CUSTOM folder.
@@ -335,12 +336,13 @@ function ai-git-commit() {
 alias curl='curl --noproxy "*"'
 alias sudo='sudo '
 alias vim=nvim
-alias aider='aider --no-verify-ssl --no-auto-commits --no-attribute-author --no-attribute-committer --no-attribute-commit-message-author --no-attribute-commit-message-committer --no-attribute-co-authored-by --stream --subtree-only --show-diffs --editor nvim --vim --pretty --code-theme monokai --watch-files --architect --model o4-mini'
+alias aider='aider --no-verify-ssl --no-auto-commits --no-attribute-author --no-attribute-committer --no-attribute-commit-message-author --no-attribute-commit-message-committer --no-attribute-co-authored-by --stream --subtree-only --show-diffs --editor nvim --vim --pretty --code-theme monokai --watch-files --architect --model o4-mini --editor-model 4o'
+alias aider-continue='aider --restore-chat-history'
 alias claude='claude --verbose'
-alias cd-gitroot='cd `git rev-parse --show-toplevel`'
+alias cd-git-root='cd `git rev-parse --show-toplevel`'
 alias rg="rg --hidden --follow -g '!html/*' -g '!.git/*' -g '!node_modules/*' -g '!vendor/*' -g '!dist/*' -g '!build/*' -g '!.next/*' -g '!out/*' -g '!coverage/*' -g '!.cache/*'"
-alias tree="tree -C -I '.git' -I 'node_modules'"
-alias cdh="cd ~"
+alias tree="tree -C -I 'html' -I '.git' -I 'node_modules' -I 'vendor' -I 'dist' -I 'build' -I '.next' -I 'out' -I 'coverage' -I '.cache'"
+alias cd-home="cd ~"
 #
 # Check if copyq exists in PATH
 if ! which copyq &>/dev/null; then
