@@ -267,8 +267,8 @@ function openai-request() {
 function ai-changelog() {
   if [[ -t 0 ]] || [[ "$1" == "-h" || "$1" == "--help" ]]; then
     echo "Usage:"
-    echo "  ai-changelog [-h | --help]"
-    echo "  git diff HEAD~1 | ai-changelog"
+    echo "  ai-diff-changelog [-h | --help]"
+    echo "  git diff HEAD~1 | ai-diff-changelog"
     echo ""
     echo "Description:"
     echo "  Generates a changelog summary in bullet points from a git diff using GPT-4o"
@@ -285,10 +285,10 @@ function ai-changelog() {
   openai-request "$prompt"
 }
 
-function ai-git-commit() {
+function aigitcommit() {
   if [[ "$1" == "-h" || "$1" == "--help" ]]; then
     echo "Usage:"
-    echo "  ai-git-commit [--no-verify]"
+    echo "  aigitcommit [--no-verify]"
     echo ""
     echo "Description:"
     echo "  Uses GPT-4o to generate a commit message from staged changes,"
@@ -328,15 +328,15 @@ function ai-git-commit() {
   rm -f "$msgfile"
 }
 
-function ai-cmd() {
+function aicmd() {
   if [[ "$1" == "-h" || "$1" == "--help" || -z "$1" ]]; then
-    echo "Usage: ai-cmd 'prompt'"
+    echo "Usage: aicmd 'prompt'"
     echo "  - Generates a Linux command that fulfils <prompt>."
     echo "  - Prints the command followed by brief bullet explanations."
     echo "  - Copies only the command (first line) to your clipboard."
     echo
     echo "Example:"
-    echo "  ai-cmd 'recursively find and delete all .DS_Store files'"
+    echo "  aicmd 'recursively find and delete all .DS_Store files'"
     return
   fi
 
@@ -381,13 +381,13 @@ function ai-cmd() {
   fi
 }
 
-function ai-copy() {
+function aiyank() {
   if [[ "$1" == "-h" || "$1" == "--help" || $# -eq 0 && -t 0 ]]; then
-    echo "Usage: ai-copy [fileA fileB ...] or via pipe"
+    echo "Usage: aiyank [fileA fileB ...] or via pipe"
     echo
     echo "Examples:"
-    echo "  ai-copy fileA.yaml fileB.json"
-    echo "  ls | ai-copy"
+    echo "  aiyank fileA.yaml fileB.json"
+    echo "  ls | aiyank"
     return
   fi
 
