@@ -441,14 +441,18 @@ alias cd-git-root='cd `git rev-parse --show-toplevel`'
 alias rg="rg --hidden --follow -g '!html/*' -g '!.git/*' -g '!node_modules/*' -g '!vendor/*' -g '!dist/*' -g '!build/*' -g '!.next/*' -g '!out/*' -g '!coverage/*' -g '!.cache/*'"
 alias tree="tree -C -I 'html' -I '.git' -I 'node_modules' -I 'vendor' -I 'dist' -I 'build' -I '.next' -I 'out' -I 'coverage' -I '.cache'"
 alias cd-home="cd ~"
-#
+
 # Check if copyq exists in PATH
 if ! which copyq &>/dev/null; then
   alias copyq="/Applications/CopyQ.app/Contents/MacOS/CopyQ"
 fi
 
-if git rev-parse --show-toplevel &>/dev/null; then
-  export FZF_CTRL_T_COMMAND='rg --files `git rev-parse --show-toplevel | xargs realpath --relative-to="${PWD}"`'
+if git_root=$(git rev-parse --show-toplevel 2>/dev/null); then
+  # Within a git repo, searches in the entire git repo, with relative paths
+  export FZF_CTRL_T_COMMAND="rg --files '$git_root' | node -e 'const { relative, resolve } = require(\"path\"); const cwd = process.cwd(); require(\"readline\").createInterface({ input: process.stdin }).on(\"line\", l => console.log(relative(cwd, resolve(l))))'"
+else
+  # Without a git repo, searches in subtree folder
+  export FZF_CTRL_T_COMMAND="rg --files | sed 's|^\./||'"
 fi
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
