@@ -309,7 +309,7 @@ function ai-git-commit() {
     return 1
   fi
 
-  local prompt="Write a clear and concise Git commit message (max 72 characters in the subject line), based on the following staged diff. Use imperative tone and follow conventional commit style if appropriate.
+  local prompt="Write a clear and concise Git commit message (max 72 characters in the subject line), based on the following staged diff. Use imperative tone, follow conventional commit style with scope, then below the subject line add a changelog in bullets.
 
   $diff"
 
