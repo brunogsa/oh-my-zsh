@@ -336,7 +336,7 @@ function ai-git-commit() {
 alias curl='curl --noproxy "*"'
 alias sudo='sudo '
 alias vim=nvim
-alias aider='aider --no-verify-ssl --no-auto-commits --no-attribute-author --no-attribute-committer --no-attribute-commit-message-author --no-attribute-commit-message-committer --no-attribute-co-authored-by --stream --subtree-only --show-diffs --editor nvim --vim --pretty --code-theme monokai --watch-files --architect --model o4-mini --editor-model 4o'
+alias aider='aider --no-verify-ssl --no-auto-commits --no-attribute-author --no-attribute-committer --no-attribute-commit-message-author --no-attribute-commit-message-committer --no-attribute-co-authored-by --stream --subtree-only --show-diffs --editor nvim --vim --pretty --code-theme monokai --architect --model o4-mini --editor-model 4o'
 alias aider-continue='aider --restore-chat-history'
 alias claude='claude --verbose'
 alias cd-git-root='cd `git rev-parse --show-toplevel`'
