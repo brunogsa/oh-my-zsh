@@ -237,7 +237,7 @@ function node-debug-reminder() {
   echo "Enjoy your debugging session!"
 }
 
-function openai-request() {
+function ai-request() {
   local prompt="$1"
 
   local json
@@ -282,7 +282,7 @@ function ai-changelog() {
 
   $diff"
 
-  openai-request "$prompt"
+  ai-request "$prompt"
 }
 
 function aigitcommit() {
@@ -314,7 +314,7 @@ function aigitcommit() {
   $diff"
 
   local message
-  message=$(openai-request "$prompt")
+  message=$(ai-request "$prompt")
 
   # Write message to temp file
   local msgfile
@@ -361,8 +361,8 @@ function aicmd() {
   $user_prompt"
 
   local result
-  result=$(openai-request "$oa_prompt") || {
-    echo "openai-request failed." >&2
+  result=$(ai-request "$oa_prompt") || {
+    echo "ai-request failed." >&2
     return 1
   }
 
