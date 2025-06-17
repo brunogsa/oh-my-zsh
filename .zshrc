@@ -240,7 +240,6 @@ function node-debug-reminder() {
 function ai-request() {
   local prompt="$1"
 
-  ##########################################################
   # 1. Try OpenAI (gpt-4o)
   ##########################################################
   local openai_json
@@ -277,7 +276,6 @@ function ai-request() {
     return 1
   fi
 
-  ##########################################################
   # 2. Fallback to Anthropic Claude (Sonnet)
   ##########################################################
   local anthropic_json
