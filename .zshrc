@@ -526,9 +526,16 @@ vimreview() {
 alias curl='curl --noproxy "*"'
 alias sudo='sudo '
 alias vim=nvim
-alias aider='aider --no-verify-ssl --no-auto-commits --no-attribute-author --no-attribute-committer --no-attribute-commit-message-author --no-attribute-commit-message-committer --no-attribute-co-authored-by --stream --subtree-only --show-diffs --editor nvim --vim --pretty --code-theme monokai --architect --model 4o --editor-model 4o --read ~/linux-utils/configs/ai-docs'
-alias aider-continue='aider --restore-chat-history'
-alias claude='claude --verbose'
+
+# Useful when using aider:
+# pipx upgrade aider-chat
+# --copy-paste: for working wih chatgpt web UI, when throttling begins
+# claude-3-7-sonnet-20250219
+# gpt-4.1-2025-04-14
+# o3-2025-04-16
+# o4-mini-2025-04-16
+alias aider='aider --no-verify-ssl --no-auto-commits --no-dirty-commits --no-attribute-author --no-attribute-committer --no-attribute-commit-message-author --no-attribute-commit-message-committer --no-attribute-co-authored-by --stream --subtree-only --edit-format diff --editor-edit-format diff --show-diffs --map-tokens 8192 --map-multiplier-no-files 1 --map-refresh always --editor nvim --vim --pretty --code-theme monokai --auto-accept-architect --model claude-3-7-sonnet-20250219 --editor-model gpt-4.1-2025-04-14 --weak-model gpt-4.1-2025-04-14 --read ~/linux-utils/configs/ai-docs/CONVENTIONS.md --read ~/.ai-context --restore-chat-history --load ~/.ai-files'
+
 alias cd-git-root='cd `git rev-parse --show-toplevel`'
 alias rg="rg --hidden --follow -g '!html/*' -g '!.git/*' -g '!node_modules/*' -g '!vendor/*' -g '!dist/*' -g '!build/*' -g '!.next/*' -g '!out/*' -g '!coverage/*' -g '!.cache/*'"
 alias tree="tree -C -I 'html' -I '.git' -I 'node_modules' -I 'vendor' -I 'dist' -I 'build' -I '.next' -I 'out' -I 'coverage' -I '.cache'"
