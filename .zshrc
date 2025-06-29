@@ -126,16 +126,20 @@ function compile-gantt-mermaid () {
 }
 
 function gen-schema-from-json () {
-  if [ -z "$1" ]; then
+  if [[ -z $1 ]]; then
     echo "Usage: gen-schema-from-json <input_json_file>"
     return 1
   fi
 
-  inputJson="$1"
-  fileName=$(basename "$inputJson" .json)
+  local inputJson=$1
+  local fileName=${inputJson%.json}
 
-  npx quicktype --src "$(pwd)/$inputJson" --src-lang json --out "$(pwd)/${fileName}.schema.json" --lang schema
-  npx @openapi-contrib/json-schema-to-openapi-schema convert "$(pwd)/${fileName}.schema.json" | jq '.' > "$(pwd)/${fileName}.openapi.json"
+  # 1. JSON  ➜  JSON-Schema
+  npx quicktype \
+    --src "$inputJson" \
+    --src-lang json \
+    --lang schema \
+    --out "${fileName}.schema.json"
 }
 
 function diff-sorted-txt () {
