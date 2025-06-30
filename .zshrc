@@ -474,9 +474,9 @@ function aiyank() {
     fi
   done
 
-  local cmd="/add ${rel_paths[*]}"
-  echo "$cmd"
-  printf "%s" "$cmd" | pbcopy
+  local result="${rel_paths[*]}"
+  echo "$result"
+  printf "%s" "$result" | pbcopy
   echo "Copied to clipboard."
 }
 
