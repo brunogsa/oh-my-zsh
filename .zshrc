@@ -536,16 +536,6 @@ function aiappend() {
     echo "  aiappend --output"
   }
 
-  # Internal function to append content with a header
-  function _append_with_header() {
-    local header="$1"
-    local content="$2"
-    local context_file="$3"
-
-    # Append two empty lines before adding new content
-    echo -e "\n\n## ${header}\n\`\`\`\n${content}\n\`\`\`" >> "$context_file"
-  }
-
   # Internal function to get clipboard content
   function _get_clipboard() {
     if command -v pbpaste &> /dev/null; then
@@ -574,7 +564,8 @@ function aiappend() {
       return 1
     fi
 
-    _append_with_header "Clipboard Content" "$content" "$context_file"
+    # Append clipboard content directly without headers or code blocks
+    echo -e "\n${content}" >> "$context_file"
     echo "Appended clipboard content to $context_file"
   }
 
@@ -597,10 +588,8 @@ function aiappend() {
     output=$(eval "$last_cmd" 2>&1) || exit_code=$?
     exit_code=${exit_code:-0}
 
-    # Append command, output, and exit code to context file
-    _append_with_header "Command" "$last_cmd" "$context_file"
-    _append_with_header "Command Output" "$output" "$context_file"
-    _append_with_header "Exit Code" "$exit_code" "$context_file"
+    # Append command and output in a more concise format
+    echo -e "\n\$ ${last_cmd}\n\n${output}\n\nExit Code: ${exit_code}" >> "$context_file"
 
     echo "Appended command '$last_cmd' and its output to $context_file"
   }
