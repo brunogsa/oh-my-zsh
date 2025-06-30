@@ -541,7 +541,7 @@ function aiappend() {
     local header="$1"
     local content="$2"
     local context_file="$3"
-    
+
     # Append two empty lines before adding new content
     echo -e "\n\n## ${header}\n\`\`\`\n${content}\n\`\`\`" >> "$context_file"
   }
@@ -568,12 +568,12 @@ function aiappend() {
     local context_file="$1"
     local content
     content=$(_get_clipboard)
-    
+
     if [[ -z "$content" ]]; then
       echo "Error: Clipboard is empty" >&2
       return 1
     fi
-    
+
     _append_with_header "Clipboard Content" "$content" "$context_file"
     echo "Appended clipboard content to $context_file"
   }
@@ -584,42 +584,42 @@ function aiappend() {
     # Get the last command from history
     local last_cmd
     last_cmd=$(fc -ln -1 | sed 's/^\s*//')
-    
+
     # Skip if the last command was aiappend itself
     if [[ "$last_cmd" == "aiappend"* ]]; then
       last_cmd=$(fc -ln -2 | sed 's/^\s*//')
     fi
-    
+
     # Execute the command again to capture output and exit code
     local output
     local exit_code
-    
+
     output=$(eval "$last_cmd" 2>&1) || exit_code=$?
     exit_code=${exit_code:-0}
-    
+
     # Append command, output, and exit code to context file
     _append_with_header "Command" "$last_cmd" "$context_file"
     _append_with_header "Command Output" "$output" "$context_file"
     _append_with_header "Exit Code" "$exit_code" "$context_file"
-    
+
     echo "Appended command '$last_cmd' and its output to $context_file"
   }
 
   # Default location for the global Aider context file
   local CONTEXT_FILE="${HOME}/.ai-context"
-  
+
   # Create context file if it doesn't exist
   if [[ ! -f "$CONTEXT_FILE" ]]; then
     touch "$CONTEXT_FILE"
     echo "Created new context file at $CONTEXT_FILE"
   fi
-  
+
   # Parse arguments
   if [[ $# -eq 0 || "$1" == "-h" || "$1" == "--help" ]]; then
     _show_help
     return 0
   fi
-  
+
   case "$1" in
     -c|--clipboard)
       _handle_clipboard "$CONTEXT_FILE"
@@ -653,7 +653,7 @@ alias vim=nvim
 # gpt-4.1-mini-2025-04-14
 # o3-2025-04-16
 # o4-mini-2025-04-16
-alias aider='aider --no-verify-ssl --add-gitignore-files --no-auto-commits --no-dirty-commits --no-attribute-author --no-attribute-committer --no-attribute-commit-message-author --no-attribute-commit-message-committer --no-attribute-co-authored-by --stream --subtree-only --map-tokens 8192 --map-multiplier-no-files 1 --map-refresh auto --editor nvim --pretty --code-theme monokai --architect --no-auto-accept-architect --model claude-3-7-sonnet-20250219 --editor-model gpt-4.1-2025-04-14 --weak-model gpt-4.1-mini-2025-04-14 --read ~/linux-utils/configs/ai-docs/CONVENTIONS.md --read ~/.ai-context --restore-chat-history --max-chat-history-tokens 16384 --skip-sanity-check-repo'
+alias aider='aider --no-verify-ssl --add-gitignore-files --no-auto-commits --no-dirty-commits --no-attribute-author --no-attribute-committer --no-attribute-commit-message-author --no-attribute-commit-message-committer --no-attribute-co-authored-by --stream --subtree-only --map-tokens 8192 --map-multiplier-no-files 1 --map-refresh auto --editor nvim --pretty --code-theme monokai --architect --no-auto-accept-architect --edit-format diff --editor-edit-format diff --model claude-3-7-sonnet-20250219 --editor-model gpt-4.1-2025-04-14 --weak-model gpt-4.1-mini-2025-04-14 --read ~/linux-utils/configs/ai-docs/CONVENTIONS.md --read ~/.ai-context --restore-chat-history --max-chat-history-tokens 16384 --skip-sanity-check-repo'
 
 alias cd-git-root='cd `git rev-parse --show-toplevel`'
 alias rg="rg --hidden --follow -g '!html/*' -g '!.git/*' -g '!node_modules/*' -g '!vendor/*' -g '!dist/*' -g '!build/*' -g '!.next/*' -g '!out/*' -g '!coverage/*' -g '!.cache/*'"
