@@ -246,9 +246,11 @@ function ai-request() {
 
   # 1. Try OpenAI (gpt-4o)
   ##########################################################
+  # gpt-4o
+  # o4-mini
   local openai_json
   openai_json=$(jq -n \
-    --arg model "gpt-4o" \
+    --arg model "o4-mini" \
     --arg temp "0.2" \
     --arg prompt "$prompt" \
     '{
@@ -635,7 +637,6 @@ alias vim=nvim
 # Useful when using aider:
 # brew upgrade aider
 # --copy-paste: for working wih chatgpt web UI, when throttling begins
-# --weak-model MODEL
 # claude-sonnet-4-20250514
 # claude-3-7-sonnet-20250219
 # gpt-4.1-2025-04-14
@@ -643,7 +644,7 @@ alias vim=nvim
 # gpt-4.1-nano-2025-04-14
 # o3-2025-04-16
 # o4-mini-2025-04-16
-alias aider='aider --no-verify-ssl --add-gitignore-files --no-auto-commits --no-dirty-commits --no-attribute-author --no-attribute-committer --no-attribute-commit-message-author --no-attribute-commit-message-committer --no-attribute-co-authored-by --stream --subtree-only --map-tokens 8192 --map-multiplier-no-files 1 --map-refresh auto --editor nvim --pretty --code-theme monokai --edit-format diff --editor-edit-format diff --architect --no-auto-accept-architect --model claude-3-7-sonnet-20250219 --editor-model gpt-4.1-2025-04-14 --weak-model gpt-4.1-nano-2025-04-14 --read ~/linux-utils/configs/ai-docs/CONVENTIONS.md --read ~/.ai-context --max-chat-history-tokens 16384 --skip-sanity-check-repo --watch-files --cache-prompts --cache-keepalive-pings 3'
+alias aider='aider --no-verify-ssl --add-gitignore-files --no-auto-commits --no-dirty-commits --no-attribute-author --no-attribute-committer --no-attribute-commit-message-author --no-attribute-commit-message-committer --no-attribute-co-authored-by --stream --subtree-only --map-tokens 4096 --map-multiplier-no-files 2 --map-refresh auto --editor nvim --pretty --code-theme monokai --edit-format diff --editor-edit-format diff --architect --auto-accept-architect --yes --model claude-3-7-sonnet-20250219 --editor-model o4-mini-2025-04-16 --weak-model o4-mini-2025-04-16 --read ~/linux-utils/configs/ai-docs/CONVENTIONS.md --read ~/.ai-context --max-chat-history-tokens 8192 --skip-sanity-check-repo --watch-files --cache-prompts --cache-keepalive-pings 3'
 alias aiderc='aider --restore-chat-history'
 
 alias cd-git-root='cd `git rev-parse --show-toplevel`'
