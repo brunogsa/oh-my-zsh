@@ -243,21 +243,21 @@ function node-debug-reminder() {
 
 function ai-request() {
   local prompt="$1"
+  local model="${2:-o4-mini}"
 
   # 1. Try OpenAI (gpt-4o)
   ##########################################################
   # gpt-4o
   # o4-mini
+
   local openai_json
   openai_json=$(jq -n \
-    --arg model "o4-mini" \
-    --arg temp "0.2" \
+    --arg model "$model" \
     --arg prompt "$prompt" \
     '{
       model: $model,
-      temperature: ($temp | tonumber),
       messages: [
-      { role: "system", content: $prompt }
+        { role: "system", content: $prompt }
       ]
     }')
 
@@ -331,6 +331,7 @@ function ai-changelog() {
     return
   fi
 
+  # AI, I would like to ensure that, in addition on the diff I provide, I want the changelog to be based on the git logs. Can the git log be extracted automatically by this script, based on the diff alone?
   local diff
   diff=$(cat)
 
@@ -338,7 +339,7 @@ function ai-changelog() {
 
   $diff"
 
-  ai-request "$prompt"
+  ai-request "$prompt" "gpt-4.1"
 }
 
 function aigitcommit() {
@@ -347,7 +348,7 @@ function aigitcommit() {
     echo "  aigitcommit [--no-verify]"
     echo ""
     echo "Description:"
-    echo "  Uses GPT-4o to generate a commit message from staged changes,"
+    echo "  Generates a commit message from staged changes,"
     echo "  then opens your editor with the message pre-filled before committing."
     return
   fi
@@ -417,7 +418,7 @@ function aicmd() {
   $user_prompt"
 
   local result
-  result=$(ai-request "$oa_prompt") || {
+  result=$(ai-request "$oa_prompt" "gpt-4.1") || {
     echo "ai-request failed." >&2
     return 1
   }
