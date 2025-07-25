@@ -323,19 +323,19 @@ function ai-request() {
 function ai-changelog() {
   if [[ -t 0 ]] || [[ "$1" == "-h" || "$1" == "--help" ]]; then
     echo "Usage:"
-    echo "  ai-diff-changelog [-h | --help]"
-    echo "  git diff HEAD~1 | ai-diff-changelog"
+    echo "  ai-changelog [-h | --help]"
+    echo "  git show HEAD~1 | ai-changelog"
+    echo "  git diff HEAD~1 | ai-changelog"
     echo ""
     echo "Description:"
-    echo "  Generates a changelog summary in bullet points from a git diff using GPT-4o"
+    echo "  Generates a changelog summary in bullet points from a git show/diff using AI"
     return
   fi
 
-  # AI, I would like to ensure that, in addition on the diff I provide, I want the changelog to be based on the git logs. Can the git log be extracted automatically by this script, based on the diff alone?
   local diff
   diff=$(cat)
 
-  local prompt="Summarize the following git diff into concise bullet points:
+  local prompt="Generate a changelog with the best practices, summarizing the following git show/info into concise bullet points:
 
   $diff"
 
