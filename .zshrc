@@ -645,7 +645,7 @@ alias vim=nvim
 # gpt-4.1-nano-2025-04-14
 # o3-2025-04-16
 # o4-mini-2025-04-16
-alias aider='aider --no-verify-ssl --add-gitignore-files --no-auto-commits --no-dirty-commits --no-attribute-author --no-attribute-committer --no-attribute-commit-message-author --no-attribute-commit-message-committer --no-attribute-co-authored-by --stream --subtree-only --map-tokens 4096 --map-multiplier-no-files 2 --map-refresh auto --editor nvim --pretty --code-theme monokai --edit-format diff --editor-edit-format diff --architect --auto-accept-architect --yes --model claude-3-7-sonnet-20250219 --editor-model o4-mini-2025-04-16 --weak-model o4-mini-2025-04-16 --read ~/linux-utils/configs/ai-docs/CONVENTIONS.md --read ~/.ai-context --max-chat-history-tokens 8192 --skip-sanity-check-repo --watch-files --cache-prompts --cache-keepalive-pings 3'
+alias aider='aider --no-verify-ssl --add-gitignore-files --no-auto-commits --no-dirty-commits --no-attribute-author --no-attribute-committer --no-attribute-commit-message-author --no-attribute-commit-message-committer --no-attribute-co-authored-by --stream --subtree-only --map-tokens 4096 --map-multiplier-no-files 2 --map-refresh auto --editor nvim --pretty --code-theme monokai --edit-format diff --editor-edit-format diff --model claude-3-7-sonnet-20250219 --editor-model o4-mini-2025-04-16 --weak-model o4-mini-2025-04-16 --read ~/linux-utils/configs/ai-docs/CONVENTIONS.md --read ~/.ai-context --max-chat-history-tokens 8192 --skip-sanity-check-repo --watch-files --cache-prompts --cache-keepalive-pings 3 --yes --no-auto-accept-architect --chat-mode ask'
 alias aiderc='aider --restore-chat-history'
 
 alias cd-git-root='cd `git rev-parse --show-toplevel`'
