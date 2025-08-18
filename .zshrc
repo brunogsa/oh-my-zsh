@@ -845,22 +845,6 @@ aireview() {
     fi
   }
 
-  _fallback_map() {
-    {
-      echo "Repo map (fallback)"
-      echo
-      if command -v tree >/dev/null 2>&1; then
-        echo "[top-level tree]"
-        tree -a -I '.git' -L 2 || true
-      else
-        echo "[file list]"
-        git ls-files | sed 's/^/ - /' || true
-      fi
-      echo
-      echo "[files by extension]"
-      git ls-files | awk -F. 'NF>1{print $NF}' | sort | uniq -c | sort -nr || true
-    } >> "$REPO_MAP"
-  }
 
   # ----- clipboard helpers (split copy & verify) -----
   local COPIED_WITH=""
@@ -1024,9 +1008,14 @@ aireview() {
   local REPO_MAP="${TMPROOT}/repo-map.txt"
   : > "$REPO_MAP"
   _try_aider_map
-  [[ -s "$REPO_MAP" ]] || _fallback_map
+  if [[ ! -s "$REPO_MAP" ]]; then
+    echo "Error: Failed to generate repo map with aider." >&2
+    echo "Please ensure aider is installed and working correctly." >&2
+    popd >/dev/null
+    return 1
+  fi
 
-  echo "Appended a repo map to context"
+  echo "Generated repo map with aider"
 
   # ----- build review bundle with appending echoes -----
   local REVIEW_FILE="/tmp/aireview-output-$(date +%s).md"
