@@ -857,13 +857,21 @@ aireview() {
   }
 
   _try_aider_map() {
-    if command -v aider >/dev/null 2>&1; then
-      (aider --subtree-only --message "/map\n/exit" --max-chat-history-tokens 0 2>/dev/null || true) \
-        | awk 'BEGIN{keep=0} /Repo map/{keep=1} {if(keep) print}' > "$REPO_MAP"
-      if [[ ! -s "$REPO_MAP" ]]; then
-        (aider --subtree-only --message "Show the repo map\n/exit" --max-chat-history-tokens 0 2>/dev/null || true) \
-          | awk 'BEGIN{keep=0} /Repo map/{keep=1} {if(keep) print}' > "$REPO_MAP"
-      fi
+    if ! command -v aider >/dev/null 2>&1; then
+      echo "Error: aider command not found. Please install aider first." >&2
+      return 1
+    fi
+
+    echo "Attempting to generate repo map with aider..."
+
+    # Try aider with max-repo-map limit and capture all output if successful
+    if aider --subtree-only --map-token 8192 --message "/map" > "$REPO_MAP" 2>&1; then
+      return 0
+    else
+      echo "Error: aider failed to generate repo map." >&2
+      echo "Aider output:" >&2
+      cat "$REPO_MAP" >&2
+      return 1
     fi
   }
 
@@ -1030,18 +1038,17 @@ aireview() {
 
   echo "Built all git context"
 
-  # ----- repo map via Aider (with fallback) -----
+  # ----- repo map via Aider (mandatory) -----
   local REPO_MAP="${TMPROOT}/repo-map.txt"
   : > "$REPO_MAP"
-  _try_aider_map
-  if [[ ! -s "$REPO_MAP" ]]; then
-    echo "Error: Failed to generate repo map with aider." >&2
-    echo "Please ensure aider is installed and working correctly." >&2
+
+  if ! _try_aider_map; then
+    echo "Failed to generate repo map with aider. This is required for aireview." >&2
     popd >/dev/null
     return 1
   fi
 
-  echo "Generated repo map with aider"
+  echo "Successfully generated repo map with aider"
 
   # ----- build review bundle with appending echoes -----
   local REVIEW_FILE="/tmp/aireview-output-$(date +%s).md"
