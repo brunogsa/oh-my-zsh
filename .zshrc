@@ -748,7 +748,25 @@ function aicopy() {
   # tmpfile auto-removed by trap
 }
 
-aireview() {
+function estimate_tokens() {
+  local file="$1"
+  local char_count word_count
+  char_count=$(wc -c < "$file" | tr -d ' ')
+  word_count=$(wc -w < "$file" | tr -d ' ')
+
+  # Two common estimation methods:
+  # Method 1: ~4 characters per token (for code/technical content)
+  # Method 2: ~0.75 words per token (for natural language)
+  local tokens_by_chars=$((char_count / 4))
+  local tokens_by_words=$((word_count * 3 / 4))
+
+  # Use the higher estimate to be conservative
+  local estimated_tokens=$((tokens_by_chars > tokens_by_words ? tokens_by_chars : tokens_by_words))
+
+  echo "$estimated_tokens"
+}
+
+function aireview() {
   _aireview_help() {
     echo "aireview - Prepare code review context for AI analysis"
     echo
@@ -793,24 +811,6 @@ aireview() {
       s="${s#*/}"         # drop host part
     fi
     echo "${s##*/}"
-  }
-
-  _estimate_tokens() {
-    local file="$1"
-    local char_count word_count
-    char_count=$(wc -c < "$file" | tr -d ' ')
-    word_count=$(wc -w < "$file" | tr -d ' ')
-
-    # Two common estimation methods:
-    # Method 1: ~4 characters per token (for code/technical content)
-    # Method 2: ~0.75 words per token (for natural language)
-    local tokens_by_chars=$((char_count / 4))
-    local tokens_by_words=$((word_count * 3 / 4))
-
-    # Use the higher estimate to be conservative
-    local estimated_tokens=$((tokens_by_chars > tokens_by_words ? tokens_by_chars : tokens_by_words))
-
-    echo "$estimated_tokens"
   }
 
   # ----- robust ref resolver (local ref, origin/<ref>, tag) -----
@@ -1157,7 +1157,7 @@ aireview() {
 
   # ----- estimate and log tokens -----
   local estimated_tokens
-  estimated_tokens=$(_estimate_tokens "$REVIEW_FILE")
+  estimated_tokens=$(estimate_tokens "$REVIEW_FILE")
   echo "Estimated tokens: ~${estimated_tokens} (${estimated_tokens}k tokens = $((estimated_tokens / 1000))k)"
 
   # ----- copy & verify -----
@@ -1208,6 +1208,7 @@ alias cd-git-root='cd `git rev-parse --show-toplevel`'
 alias rg="rg --hidden --follow -g '!html/*' -g '!.git/*' -g '!node_modules/*' -g '!vendor/*' -g '!dist/*' -g '!build/*' -g '!.next/*' -g '!out/*' -g '!coverage/*' -g '!.cache/*'"
 alias tree="tree -C -I 'html' -I '.git' -I 'node_modules' -I 'vendor' -I 'dist' -I 'build' -I '.next' -I 'out' -I 'coverage' -I '.cache'"
 alias cd-home="cd ~"
+alias claude="unset ANTHROPIC_API_KEY && ANTHROPIC_API_KEY="" claude"
 
 # Check if copyq exists in PATH
 if ! which copyq &>/dev/null; then
@@ -1242,5 +1243,3 @@ source ~/.secrets.sh
 # AsyncAPI CLI Autocomplete
 
 ASYNCAPI_AC_ZSH_SETUP_PATH=/Users/brunoagostini/Library/Caches/@asyncapi/cli/autocomplete/zsh_setup && test -f $ASYNCAPI_AC_ZSH_SETUP_PATH && source $ASYNCAPI_AC_ZSH_SETUP_PATH; # asyncapi autocomplete setup
-
-
