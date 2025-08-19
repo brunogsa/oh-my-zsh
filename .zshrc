@@ -796,31 +796,53 @@ aireview() {
   }
 
   # ----- robust ref resolver (local ref, origin/<ref>, tag) -----
+  _list_available_refs() {
+    local pattern="$1"
+    echo "Available branches matching '$pattern':"
+    git branch -r | grep -E "(origin/.*${pattern}|${pattern}.*)" | head -5 || true
+    echo
+    echo "Available tags matching '$pattern':"
+    git tag | grep -E "${pattern}" | head -5 || true
+    echo
+  }
+
   _resolve_ref() {
     local ref="$1"
-    # already valid (commit-ish or expression)?
-    if git rev-parse --verify --quiet "${ref}^{commit}" >/dev/null; then
-      echo "$ref"; return 0
+
+    # If already starts with origin/, use as-is
+    if [[ "$ref" == origin/* ]]; then
+      if git rev-parse --verify "${ref}^{commit}" >/dev/null 2>&1; then
+        echo "$ref"; return 0
+      fi
+    else
+      # Always try with origin/ prefix first
+      if git rev-parse --verify "origin/${ref}^{commit}" >/dev/null 2>&1; then
+        echo "origin/${ref}"; return 0
+      fi
     fi
-    # origin/<ref> (remote branch)
-    if git rev-parse --verify --quiet "origin/${ref}^{commit}" >/dev/null; then
-      echo "origin/${ref}"; return 0
-    fi
-    # tag
-    if git rev-parse --verify --quiet "refs/tags/${ref}^{commit}" >/dev/null; then
+
+    # Try as a tag
+    if git rev-parse --verify "refs/tags/${ref}^{commit}" >/dev/null 2>&1; then
       echo "refs/tags/${ref}"; return 0
     fi
-    # try fetching explicit heads/tags (in case they weren’t fetched above)
-    git fetch --all --tags --prune --quiet 2>/dev/null || true
-    if git rev-parse --verify --quiet "${ref}^{commit}" >/dev/null; then
-      echo "$ref"; return 0
+
+    # Fetch and try again
+    git fetch --all --tags --prune 2>/dev/null || true
+
+    if [[ "$ref" == origin/* ]]; then
+      if git rev-parse --verify "${ref}^{commit}" >/dev/null 2>&1; then
+        echo "$ref"; return 0
+      fi
+    else
+      if git rev-parse --verify "origin/${ref}^{commit}" >/dev/null 2>&1; then
+        echo "origin/${ref}"; return 0
+      fi
     fi
-    if git rev-parse --verify --quiet "origin/${ref}^{commit}" >/dev/null; then
-      echo "origin/${ref}"; return 0
-    fi
-    if git rev-parse --verify --quiet "refs/tags/${ref}^{commit}" >/dev/null; then
+
+    if git rev-parse --verify "refs/tags/${ref}^{commit}" >/dev/null 2>&1; then
       echo "refs/tags/${ref}"; return 0
     fi
+
     return 1
   }
 
@@ -956,10 +978,14 @@ aireview() {
   local FROM_REF TO_REF
   if ! FROM_REF="$(_resolve_ref "$FROM_REF_IN")"; then
     echo "Error: could not resolve FROM ref: '$FROM_REF_IN'" >&2
+    echo >&2
+    _list_available_refs "$FROM_REF_IN"
     popd >/dev/null; return 1
   fi
   if ! TO_REF="$(_resolve_ref "$TO_REF_IN")"; then
     echo "Error: could not resolve TO ref: '$TO_REF_IN'" >&2
+    echo >&2
+    _list_available_refs "$TO_REF_IN"
     popd >/dev/null; return 1
   fi
 
@@ -1080,7 +1106,7 @@ aireview() {
   echo >> "$REVIEW_FILE"
   echo "Please perform a comprehensive code review following these guidelines:" >> "$REVIEW_FILE"
   echo >> "$REVIEW_FILE"
-  echo "Start with a **Changelog** summarizing what changed (grouped, concise)." >> "$REVIEW_FILE"
+  echo "Start with a **Changelog** summarizing what changed (grouped, concise, in bullets)." >> "$REVIEW_FILE"
   echo >> "$REVIEW_FILE"
   echo "**Review Priority Order:**" >> "$REVIEW_FILE"
   echo "1) **Correctness** – logic is correct; no bugs/races/ordering mistakes." >> "$REVIEW_FILE"
@@ -1093,16 +1119,16 @@ aireview() {
   echo "5) **Logging** – useful, leveled, non-PII, actionable; no noisy loops." >> "$REVIEW_FILE"
   echo "6) **SOLID** – SRP, OCP, LSP, ISP, DIP where applicable." >> "$REVIEW_FILE"
   echo "7) **DRY / KISS** – remove duplication; keep it simple; avoid premature optimization." >> "$REVIEW_FILE"
-  echo "8) **Performance** – hot paths, complexity, I/O, memory, N+1 queries." >> "$REVIEW_FILE"
+  echo "8) **Performance** – hot paths, complexity (Big O), I/O, memory, N+1 queries." >> "$REVIEW_FILE"
   echo "9) **Security** – injection, path traversal, deserialization, authn/z, secrets, SSRF/RCE, unsafe eval, dependency risks." >> "$REVIEW_FILE"
   echo >> "$REVIEW_FILE"
   echo "**Feedback Format (per file):**" >> "$REVIEW_FILE"
   echo "- Use the pattern \`<file:line>\` for all items." >> "$REVIEW_FILE"
   echo "- Ask **goal-directed questions** (explain how the answer would change the code or the decision)." >> "$REVIEW_FILE"
   echo "- For every suggestion, include a minimal **unified diff patch** of the improvement." >> "$REVIEW_FILE"
-  echo "- Tag each item as **MANDATORY**, **RECOMMENDED**, or **NIT** (optional)." >> "$REVIEW_FILE"
+  echo "- Tag each item as **MANDATORY**, **RECOMMENDED**, or **NITPICK** (optional)." >> "$REVIEW_FILE"
   echo >> "$REVIEW_FILE"
-  echo "Think deeply and be rigorous. Prefer small, surgical diffs over broad rewrites. End with a short list of action items grouped by priority." >> "$REVIEW_FILE"
+  echo "Think deeply and be rigorous. Prefer small, surgical diffs over broad rewrites. End with a short list of action items grouped by file, then priority." >> "$REVIEW_FILE"
 
   # ----- copy & verify -----
   if ! _copy_to_clipboard "$REVIEW_FILE"; then
