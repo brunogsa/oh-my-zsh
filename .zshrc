@@ -1025,6 +1025,33 @@ function aireview() {
 
   echo "Got the merge base"
 
+  # Central list of common dependency lockfiles
+  local LOCKFILES=(
+    "yarn.lock"
+    "package-lock.json"
+    "npm-shrinkwrap.json"
+    "pnpm-lock.yaml"
+    "bun.lockb"
+    "Gemfile.lock"
+    "Cargo.lock"
+    "Pipfile.lock"
+    "poetry.lock"
+    "composer.lock"
+    "Podfile.lock"
+    "pubspec.lock"
+    "gradle.lockfile"
+    "gradle/dependency-locks/.*"
+    "go.sum"
+    "mix.lock"
+    "packages.lock.json"
+    "Paket.lock"
+    "conda-lock.yml"
+    "shrinkwrap.yaml"
+  )
+
+  # Regex to match lockfiles in paths
+  local LOCKFILE_REGEX="(^|/)($(IFS='|'; echo "${LOCKFILES[*]}"))$"
+
   local CHANGED_LIST
   CHANGED_LIST="$(git diff --name-only "$MERGE_BASE" "$TO_REF" | grep -vE '^\s*$' || true)"
   if [[ -z "$CHANGED_LIST" ]]; then
@@ -1098,9 +1125,16 @@ function aireview() {
   while IFS= read -r file; do
     [[ -z "$file" ]] && continue
     echo "### \`$file\`" >> "$REVIEW_FILE"
+    if [[ "$file" =~ $LOCKFILE_REGEX ]]; then
+      # Do not dump entire lockfile contents (too large/noisy)
+      echo "_[lockfile content omitted in this section; see truncated diff below]_" >> "$REVIEW_FILE"
+      echo >> "$REVIEW_FILE"
+      continue
+    fi
     if git cat-file -e "${TO_REF}:${file}" 2>/dev/null; then
       echo '```' >> "$REVIEW_FILE"
-      git show "${TO_REF}:${file}" 2>/dev/null >> "$REVIEW_FILE" || echo "[Unable to show file content]" >> "$REVIEW_FILE"
+      git show "${TO_REF}:${file}" 2>/dev/null >> "$REVIEW_FILE" \
+        || echo "[Unable to show file content]" >> "$REVIEW_FILE"
       echo '```' >> "$REVIEW_FILE"
     else
       echo "_[deleted or not present in ${TO_REF}]_" >> "$REVIEW_FILE"
@@ -1114,8 +1148,13 @@ function aireview() {
   echo "## Git Diff Output (range: ${MERGE_BASE}..${TO_REF})" >> "$REVIEW_FILE"
   echo >> "$REVIEW_FILE"
   echo '```diff' >> "$REVIEW_FILE"
-  git diff "$MERGE_BASE" "$TO_REF" >> "$REVIEW_FILE" || true
-  echo '```' >> "$REVIEW_FILE"
+  # Exclude all lock files from the diff using the central list
+  local GIT_DIFF_EXCLUDES=()
+  for f in "${LOCKFILES[@]}"; do
+    GIT_DIFF_EXCLUDES+=(":(exclude)$f")
+    GIT_DIFF_EXCLUDES+=(":(exclude)**/$f")
+  done
+  git diff "$MERGE_BASE" "$TO_REF" -- . "${GIT_DIFF_EXCLUDES[@]}" >> "$REVIEW_FILE" || true
   echo >> "$REVIEW_FILE"
   echo "---" >> "$REVIEW_FILE"
   echo >> "$REVIEW_FILE"
@@ -1140,7 +1179,7 @@ function aireview() {
   echo "   - document expected behavior," >> "$REVIEW_FILE"
   echo "   - cover corner cases," >> "$REVIEW_FILE"
   echo "   - are minimal, readable and stable?" >> "$REVIEW_FILE"
-  echo "4) **Code quality** – clarity, naming, cohesion; avoid unnecessary coupling; readability." >> "$REVIEW_FILE"
+  echo "4) **Code quality** – clarity, naming, no magic numbers, cohesion, avoid unnecessary coupling." >> "$REVIEW_FILE"
   echo "5) **Logging** – useful, leveled, non-PII, actionable; no noisy loops." >> "$REVIEW_FILE"
   echo "6) **SOLID** – SRP, OCP, LSP, ISP, DIP where applicable." >> "$REVIEW_FILE"
   echo "7) **DRY / KISS** – remove duplication; keep it simple; avoid premature optimization." >> "$REVIEW_FILE"
