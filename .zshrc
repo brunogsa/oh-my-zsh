@@ -865,7 +865,7 @@ aireview() {
     echo "Attempting to generate repo map with aider..."
 
     # Try aider with max-repo-map limit and capture all output if successful
-    if aider --subtree-only --map-token 8192 --message "/map" > "$REPO_MAP" 2>&1; then
+    if aider --subtree-only --map-token 8192 --show-repo-map --no-pretty > "$REPO_MAP" 2>&1; then
       return 0
     else
       echo "Error: aider failed to generate repo map." >&2
