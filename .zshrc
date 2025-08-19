@@ -795,6 +795,24 @@ aireview() {
     echo "${s##*/}"
   }
 
+  _estimate_tokens() {
+    local file="$1"
+    local char_count word_count
+    char_count=$(wc -c < "$file" | tr -d ' ')
+    word_count=$(wc -w < "$file" | tr -d ' ')
+
+    # Two common estimation methods:
+    # Method 1: ~4 characters per token (for code/technical content)
+    # Method 2: ~0.75 words per token (for natural language)
+    local tokens_by_chars=$((char_count / 4))
+    local tokens_by_words=$((word_count * 3 / 4))
+
+    # Use the higher estimate to be conservative
+    local estimated_tokens=$((tokens_by_chars > tokens_by_words ? tokens_by_chars : tokens_by_words))
+
+    echo "$estimated_tokens"
+  }
+
   # ----- robust ref resolver (local ref, origin/<ref>, tag) -----
   _list_available_refs() {
     local pattern="$1"
@@ -857,7 +875,7 @@ aireview() {
   }
 
   _try_aider_map() {
-    if ! command -v aider >/dev/null 2>&1; then
+    if ! command -v aider >/dev/null 2>/dev/null; then
       echo "Error: aider command not found. Please install aider first." >&2
       return 1
     fi
@@ -1136,6 +1154,11 @@ aireview() {
   echo "- Tag each item as **MANDATORY**, **RECOMMENDED**, or **NITPICK** (optional)." >> "$REVIEW_FILE"
   echo >> "$REVIEW_FILE"
   echo "Think deeply and be rigorous. Prefer small, surgical diffs over broad rewrites. End with a short list of action items grouped by file, then priority." >> "$REVIEW_FILE"
+
+  # ----- estimate and log tokens -----
+  local estimated_tokens
+  estimated_tokens=$(_estimate_tokens "$REVIEW_FILE")
+  echo "Estimated tokens: ~${estimated_tokens} (${estimated_tokens}k tokens = $((estimated_tokens / 1000))k)"
 
   # ----- copy & verify -----
   if ! _copy_to_clipboard "$REVIEW_FILE"; then
