@@ -953,6 +953,12 @@ function aireview() {
   local FROM_REF_IN="$1"   # matches `git diff` order: from/base
   local TO_REF_IN="$2"     # to/feature
 
+  # Save original directory for cleanup
+  local ORIGINAL_DIR="$(pwd)"
+  
+  # Ensure we always return to original directory on exit
+  trap 'cd "$ORIGINAL_DIR" 2>/dev/null || true' EXIT INT TERM
+
   # ----- must be in a git repo -----
   if ! git rev-parse --is-inside-work-tree &>/dev/null; then
     echo "Error: Not inside a git repository." >&2
@@ -992,7 +998,7 @@ function aireview() {
     echo "Error: git clone via SSH failed: $SSH_URL" >&2
     return 1
   fi
-  pushd "$CLONED" >/dev/null || return 1
+  cd "$CLONED" || { echo "Failed to cd to cloned repo"; cd "$ORIGINAL_DIR"; return 1; }
 
   echo "Cloned at: $CLONED"
 
@@ -1006,13 +1012,13 @@ function aireview() {
     echo "Error: could not resolve FROM ref: '$FROM_REF_IN'" >&2
     echo >&2
     _list_available_refs "$FROM_REF_IN"
-    popd >/dev/null; return 1
+    cd "$ORIGINAL_DIR"; return 1
   fi
   if ! TO_REF="$(_resolve_ref "$TO_REF_IN")"; then
     echo "Error: could not resolve TO ref: '$TO_REF_IN'" >&2
     echo >&2
     _list_available_refs "$TO_REF_IN"
-    popd >/dev/null; return 1
+    cd "$ORIGINAL_DIR"; return 1
   fi
 
   # ----- merge-base and changed files for range MERGE_BASE..TO_REF -----
@@ -1020,7 +1026,7 @@ function aireview() {
   MERGE_BASE="$(git merge-base "$FROM_REF" "$TO_REF")"
   if [[ -z "$MERGE_BASE" ]]; then
     echo "Error: could not compute merge-base between $FROM_REF and $TO_REF" >&2
-    popd >/dev/null; return 1
+    cd "$ORIGINAL_DIR"; return 1
   fi
 
   echo "Got the merge base"
@@ -1056,7 +1062,7 @@ function aireview() {
   CHANGED_LIST="$(git diff --name-only "$MERGE_BASE" "$TO_REF" | grep -vE '^\s*$' || true)"
   if [[ -z "$CHANGED_LIST" ]]; then
     echo "No changes found between $FROM_REF and $TO_REF." >&2
-    popd >/dev/null; return 1
+    cd "$ORIGINAL_DIR"; return 1
   fi
 
   echo "Got the change list"
@@ -1065,7 +1071,15 @@ function aireview() {
 
   local WORK_DIR
   WORK_DIR="$(printf '%s\n' "$CHANGED_LIST" | _longest_common_dir)"
-  cd "$WORK_DIR" || { echo "Failed to cd to $WORK_DIR"; popd >/dev/null; return 1; }
+
+  # Checkout TO_REF to ensure the working directory exists
+  git checkout "$TO_REF" >/dev/null 2>&1 || {
+    echo "Failed to checkout $TO_REF" >&2
+    cd "$ORIGINAL_DIR"
+    return 1
+  }
+
+  cd "$WORK_DIR" || { echo "Failed to cd to $WORK_DIR"; cd "$ORIGINAL_DIR"; return 1; }
 
   echo "Longest common directory found: $WORK_DIR"
 
@@ -1089,7 +1103,7 @@ function aireview() {
 
   if ! _try_aider_map; then
     echo "Failed to generate repo map with aider. This is required for aireview." >&2
-    popd >/dev/null
+    cd "$ORIGINAL_DIR"
     return 1
   fi
 
@@ -1204,7 +1218,7 @@ function aireview() {
     echo "Warning: Copy to clipboard failed."
     echo "Bundle file: $REVIEW_FILE"
     echo "Temp clone:  $CLONED"
-    popd >/dev/null
+    cd "$ORIGINAL_DIR"
     return 1
   fi
 
@@ -1212,14 +1226,14 @@ function aireview() {
     echo "Warning: Clipboard may be truncated."
     echo "Bundle file: $REVIEW_FILE"
     echo "Temp clone:  $CLONED"
-    popd >/dev/null
+    cd "$ORIGINAL_DIR"
     return 1
   fi
 
   echo "OK. Review bundle copied to clipboard (via ${COPIED_WITH})."
   echo "Bundle file: $REVIEW_FILE"
   echo "Temp clone:  $CLONED"
-  popd >/dev/null
+  cd "$ORIGINAL_DIR"
 }
 
 # Set personal aliases, overriding those provided by oh-my-zsh libs,
