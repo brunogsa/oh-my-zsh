@@ -882,13 +882,14 @@ function aireview() {
 
     echo "Attempting to generate repo map with aider..."
 
-    # Try aider with max-repo-map limit and capture all output if successful
-    if aider --subtree-only --map-token 8192 --show-repo-map --no-pretty > "$REPO_MAP" 2>&1; then
+    # Try aider with max-repo-map limit, display output to stdout, and capture to file
+    aider --subtree-only --map-token 8192 --show-repo-map --no-pretty 2>&1 | tee "$REPO_MAP"
+
+    # Check aider's exit status (first command in the pipe)
+    if [[ ${PIPESTATUS[0]} -eq 0 ]]; then
       return 0
     else
       echo "Error: aider failed to generate repo map." >&2
-      echo "Aider output:" >&2
-      cat "$REPO_MAP" >&2
       return 1
     fi
   }
