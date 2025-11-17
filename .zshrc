@@ -1425,11 +1425,6 @@ function aws-get-cloudwatch-logs() {
       echo "$response" | egrep '"message": "{' | grep -o '{.*' | sed 's/\\"/"/g' | sed 's/\\//g' >> $logfile
     fi
 
-    # Extract next token for pagination
-
-    # Save previous token before extracting new one
-    prev_token="$next_token"
-
     # Extract the new next token
     next_token=$(echo "$response" | grep nextToken | cut -d ':' -f 2 | tr -d '" \n')
 
@@ -1439,17 +1434,13 @@ function aws-get-cloudwatch-logs() {
       break
     fi
 
-    if [[ -n "$prev_token" ]] && [[ "$next_token" == "$prev_token" ]]; then
-      echo "Token unchanged. No more results available."
-      break
-    fi
-
     echo "  Next token found (${next_token}), continuing..."
   done
 
   echo
   echo "Complete!"
   echo "Total events fetched: $total_events"
+  echo "Output File: $logfile"
 }
 
 # Set personal aliases, overriding those provided by oh-my-zsh libs,
