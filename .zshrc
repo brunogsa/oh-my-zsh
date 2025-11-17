@@ -1461,7 +1461,7 @@ alias vim=nvim
 # gpt-4.1-nano-2025-04-14
 # o3-2025-04-16
 # o4-mini-2025-04-16
-alias aid='aider --add-gitignore-files --no-auto-commits --no-dirty-commits --no-attribute-author --no-attribute-committer --no-attribute-commit-message-author --no-attribute-commit-message-committer --no-attribute-co-authored-by --stream --subtree-only --map-tokens 4096 --map-multiplier-no-files 2 --map-refresh auto --editor nvim --pretty --code-theme monokai --edit-format diff --editor-edit-format diff --read ~/linux-utils/configs/ai-docs/CONVENTIONS.md --read ~/.ai-context --max-chat-history-tokens 0 --skip-sanity-check-repo --watch-files --cache-prompts --cache-keepalive-pings 3 --no-auto-accept-architect --alias 41:gpt-4.1 --alias 41m:gpt-4.1-mini --alias 41n:gpt-4.1-nano --alias o4m:o4-mini-2025-04-16 --model 41m --editor-model 41m --weak-model 41n --no-verify-ssl'
+alias aid='aider --add-gitignore-files --no-auto-commits --no-dirty-commits --no-attribute-author --no-attribute-committer --no-attribute-commit-message-author --no-attribute-commit-message-committer --no-attribute-co-authored-by --stream --subtree-only --map-tokens 4096 --map-multiplier-no-files 2 --map-refresh auto --editor nvim --pretty --code-theme monokai --edit-format diff --editor-edit-format diff --read ~/.claude/CLAUDE.md --max-chat-history-tokens 0 --skip-sanity-check-repo --watch-files --cache-prompts --cache-keepalive-pings 3 --no-auto-accept-architect --alias 41:gpt-4.1 --alias 41m:gpt-4.1-mini --alias 41n:gpt-4.1-nano --alias o4m:o4-mini-2025-04-16 --model 41m --editor-model 41m --weak-model 41n --no-verify-ssl'
 alias aidc='aid --restore-chat-history'
 
 alias cd-git-root='cd `git rev-parse --show-toplevel`'
