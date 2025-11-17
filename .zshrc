@@ -1181,33 +1181,27 @@ function aireview() {
   echo "---" >> "$REVIEW_FILE"
   echo >> "$REVIEW_FILE"
 
-  echo "## Code Review Instructions" >> "$REVIEW_FILE"
-  echo >> "$REVIEW_FILE"
-  echo "Please perform a comprehensive code review following these guidelines:" >> "$REVIEW_FILE"
-  echo >> "$REVIEW_FILE"
-  echo "Start with a **Changelog** summarizing what changed (grouped, concise, in bullets)." >> "$REVIEW_FILE"
-  echo >> "$REVIEW_FILE"
-  echo "**Review Priority Order:**" >> "$REVIEW_FILE"
-  echo "1) **Correctness** – logic is correct; no bugs/races/ordering mistakes." >> "$REVIEW_FILE"
-  echo "2) **Corner cases** – inputs, failures, timeouts, empty/large data, i18n, encodings." >> "$REVIEW_FILE"
-  echo "3) **Testing** – are there tests that:" >> "$REVIEW_FILE"
-  echo "   - document expected behavior," >> "$REVIEW_FILE"
-  echo "   - cover corner cases," >> "$REVIEW_FILE"
-  echo "   - are minimal, readable and stable?" >> "$REVIEW_FILE"
-  echo "4) **Code quality** – clarity, naming, no magic numbers, cohesion, avoid unnecessary coupling." >> "$REVIEW_FILE"
-  echo "5) **Logging** – useful, leveled, non-PII, actionable; no noisy loops." >> "$REVIEW_FILE"
-  echo "6) **SOLID** – SRP, OCP, LSP, ISP, DIP where applicable." >> "$REVIEW_FILE"
-  echo "7) **DRY / KISS** – remove duplication; keep it simple; avoid premature optimization." >> "$REVIEW_FILE"
-  echo "8) **Performance** – hot paths, complexity (Big O), I/O, memory, N+1 queries." >> "$REVIEW_FILE"
-  echo "9) **Security** – injection, path traversal, deserialization, authn/z, secrets, SSRF/RCE, unsafe eval, dependency risks." >> "$REVIEW_FILE"
-  echo >> "$REVIEW_FILE"
-  echo "**Feedback Format (per file):**" >> "$REVIEW_FILE"
-  echo "- Use the pattern \`<file:line>\` for all items." >> "$REVIEW_FILE"
-  echo "- Ask **goal-directed questions** (explain how the answer would change the code or the decision)." >> "$REVIEW_FILE"
-  echo "- For every suggestion, include a minimal **unified diff patch** of the improvement." >> "$REVIEW_FILE"
-  echo "- Tag each item as **MANDATORY**, **RECOMMENDED**, or **NITPICK** (optional)." >> "$REVIEW_FILE"
-  echo >> "$REVIEW_FILE"
-  echo "Think deeply and be rigorous. Prefer small, surgical diffs over broad rewrites. End with a short list of action items grouped by file, then priority." >> "$REVIEW_FILE"
+  # ----- extract review guidelines and code conventions from CLAUDE.md -----
+  local CLAUDE_MD="$HOME/.claude/CLAUDE.md"
+  if [[ ! -f "$CLAUDE_MD" ]]; then
+    echo "Warning: $CLAUDE_MD not found, using fallback review instructions" >&2
+    echo "## Code Review Instructions" >> "$REVIEW_FILE"
+    echo >> "$REVIEW_FILE"
+    echo "Please perform a comprehensive code review following best practices." >> "$REVIEW_FILE"
+  else
+    # Extract CODE section (up to but not including TESTS section)
+    echo "## Code Conventions (Reference)" >> "$REVIEW_FILE"
+    echo >> "$REVIEW_FILE"
+    sed -n '/^## CODE$/,/^## TESTS$/p' "$CLAUDE_MD" | sed '$d' >> "$REVIEW_FILE"
+    echo >> "$REVIEW_FILE"
+    echo "---" >> "$REVIEW_FILE"
+    echo >> "$REVIEW_FILE"
+
+    # Extract REVIEW section (up to but not including RECAP or next ## section)
+    echo "## Code Review Instructions" >> "$REVIEW_FILE"
+    echo >> "$REVIEW_FILE"
+    sed -n '/^## REVIEW$/,/^## RECAP$/p' "$CLAUDE_MD" | sed '$d' >> "$REVIEW_FILE"
+  fi
 
   # ----- estimate and log tokens -----
   local estimated_tokens
