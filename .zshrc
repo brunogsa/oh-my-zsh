@@ -883,7 +883,10 @@ function aireview() {
     echo "Attempting to generate repo map with aider..."
 
     # Try aider with max-repo-map limit, display output to stdout, and capture to file
-    aider --subtree-only --map-token 8192 --show-repo-map --no-pretty 2>&1 | tee "$REPO_MAP"
+    # Flags for non-interactive mode:
+    # --yes-always: auto-answer yes to all prompts (git init, aiderignore creation, etc.)
+    # --no-auto-commits: don't auto-commit since we're just generating a map
+    aider --subtree-only --map-token 8192 --show-repo-map --no-pretty --yes-always --no-auto-commits 2>&1 | tee "$REPO_MAP"
 
     # Check aider's exit status (first command in the pipe)
     if [[ ${PIPESTATUS[0]} -eq 0 ]]; then
