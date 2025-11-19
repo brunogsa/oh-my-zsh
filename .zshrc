@@ -1148,7 +1148,7 @@ function aireview() {
     fi
     if git cat-file -e "${TO_REF}:${file}" 2>/dev/null; then
       echo '```' >> "$REVIEW_FILE"
-      git show "${TO_REF}:${file}" 2>/dev/null >> "$REVIEW_FILE" \
+      git show "${TO_REF}:${file}" 2>/dev/null | cat -n >> "$REVIEW_FILE" \
         || echo "[Unable to show file content]" >> "$REVIEW_FILE"
       echo '```' >> "$REVIEW_FILE"
     else
