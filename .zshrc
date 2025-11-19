@@ -1469,13 +1469,7 @@ if ! which copyq &>/dev/null; then
   alias copyq="/Applications/CopyQ.app/Contents/MacOS/CopyQ"
 fi
 
-if git_root=$(git rev-parse --show-toplevel 2>/dev/null); then
-  # Within a git repo, searches in the entire git repo, with relative paths
-  export FZF_CTRL_T_COMMAND="rg --files '$git_root' | node -e 'const { relative, resolve } = require(\"path\"); const cwd = process.cwd(); require(\"readline\").createInterface({ input: process.stdin }).on(\"line\", l => console.log(relative(cwd, resolve(l))))'"
-else
-  # Without a git repo, searches in subtree folder
-  export FZF_CTRL_T_COMMAND="rg --files | sed 's|^\./||'"
-fi
+export FZF_CTRL_T_COMMAND="if git_root=\$(git rev-parse --show-toplevel 2>/dev/null); then rg --files \"\$git_root\" | node -e 'const { relative, resolve } = require(\"path\"); const cwd = process.cwd(); require(\"readline\").createInterface({ input: process.stdin }).on(\"line\", l => console.log(relative(cwd, resolve(l))))'; else rg --files | sed 's|^\\./||'; fi"
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
 export AWS_CLI_FILE_ENCODING=UTF-8
