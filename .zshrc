@@ -1137,7 +1137,7 @@ function aireview() {
   echo "---" >> "$REVIEW_FILE"
   echo >> "$REVIEW_FILE"
 
-  echo "## Modified Files Content (at ${TO_REF})" >> "$REVIEW_FILE"
+  echo "## Full content of files that were modified, with their lines (at ${TO_REF})" >> "$REVIEW_FILE"
   echo >> "$REVIEW_FILE"
 
   while IFS= read -r file; do
