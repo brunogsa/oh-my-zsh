@@ -98,6 +98,8 @@ export LANG=en_US.UTF-8
 # ssh
 # export SSH_KEY_PATH="~/.ssh/rsa_id"
 
+# TODO: Move all these utility functions to dedicated files, that are automatically sourced here
+
 function compile-mermaid () {
   if [ -z "$1" ]; then
     echo "Usage: compile-mermaid <mermaid_file>"
@@ -766,6 +768,7 @@ function estimate_tokens() {
   echo "$estimated_tokens"
 }
 
+# TODO: Apply prompt engineering practices to improve its quality
 function aireview() {
   _aireview_help() {
     echo "aireview - Prepare code review context for AI analysis"
@@ -1163,6 +1166,7 @@ function aireview() {
   echo "---" >> "$REVIEW_FILE"
   echo >> "$REVIEW_FILE"
 
+  # TODO: Use git show instead of git diff
   echo "## Git Diff Output (range: ${MERGE_BASE}..${TO_REF})" >> "$REVIEW_FILE"
   echo >> "$REVIEW_FILE"
   echo '```diff' >> "$REVIEW_FILE"
@@ -1177,12 +1181,19 @@ function aireview() {
   echo "---" >> "$REVIEW_FILE"
   echo >> "$REVIEW_FILE"
 
+  # TODO: If we use git show, is git log necessary?
+  # TODO: Or should we keep only git diff --stat?
+  # TODO: git show is inside here. Does not it repeat the git diff content?
   echo "## Git Context" >> "$REVIEW_FILE"
   echo >> "$REVIEW_FILE"
   cat "$GIT_CTX" >> "$REVIEW_FILE"
   echo >> "$REVIEW_FILE"
   echo "---" >> "$REVIEW_FILE"
   echo >> "$REVIEW_FILE"
+
+  # TODO: Add PR Description using gh apis
+
+  # TODO: Add Jira Description using apis
 
   # ----- extract review guidelines and code conventions from CLAUDE.md -----
   local CLAUDE_MD="$HOME/.claude/CLAUDE.md"
