@@ -290,6 +290,8 @@ function aireview() {
   _add_full_file_contents() {
     echo "## Full content of files that were modified, with their lines (at ${TO_REF})" >> "$REVIEW_FILE"
     echo >> "$REVIEW_FILE"
+    echo "_Line numbers are formatted as \`LINE:00123|\` (5-digit zero-padded) to preserve code indentation_" >> "$REVIEW_FILE"
+    echo >> "$REVIEW_FILE"
 
     while IFS= read -r file; do
       [[ -z "$file" ]] && continue
@@ -302,7 +304,8 @@ function aireview() {
       fi
       if git cat-file -e "${TO_REF}:${file}" 2>/dev/null; then
         echo '```' >> "$REVIEW_FILE"
-        git show "${TO_REF}:${file}" 2>/dev/null | cat -n >> "$REVIEW_FILE" \
+        # Use nl with 5-digit zero-padded format to preserve indentation: LINE:00123| content
+        git show "${TO_REF}:${file}" 2>/dev/null | nl -ba -w5 -nrz -s'| ' | sed 's/^/LINE:/' >> "$REVIEW_FILE" \
           || echo "[Unable to show file content]" >> "$REVIEW_FILE"
         echo '```' >> "$REVIEW_FILE"
       else
@@ -487,7 +490,7 @@ function aireview() {
   TMPROOT="$(mktemp -d "/tmp/aireview.${REPO_NAME}.XXXXXX")" || { echo "mktemp failed"; return 1; }
   local CLONED="${TMPROOT}/${REPO_NAME}"
 
-  if ! git clone --quiet "$SSH_URL" "$CLONED"; then
+  if ! git clone "$SSH_URL" "$CLONED"; then
     echo "Error: git clone via SSH failed: $SSH_URL" >&2
     return 1
   fi
