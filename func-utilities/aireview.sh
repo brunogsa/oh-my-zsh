@@ -330,9 +330,6 @@ function aireview() {
   echo >> "$GIT_CTX"
   echo "### git diff --stat (range: $MERGE_BASE..$TO_REF)" >> "$GIT_CTX"
   (git diff --no-color --stat "$MERGE_BASE" "$TO_REF" || true) >> "$GIT_CTX"
-  echo >> "$GIT_CTX"
-  echo "### git show (HEAD of TO: $TO_REF)" >> "$GIT_CTX"
-  (git show --no-color "$TO_REF" || true) >> "$GIT_CTX"
 
   echo "Built all git context"
 
@@ -398,7 +395,6 @@ function aireview() {
   echo "---" >> "$REVIEW_FILE"
   echo >> "$REVIEW_FILE"
 
-  # TODO: Use git show instead of git diff
   echo "## Git Diff Output (range: ${MERGE_BASE}..${TO_REF})" >> "$REVIEW_FILE"
   echo >> "$REVIEW_FILE"
   echo '```diff' >> "$REVIEW_FILE"
@@ -413,9 +409,6 @@ function aireview() {
   echo "---" >> "$REVIEW_FILE"
   echo >> "$REVIEW_FILE"
 
-  # TODO: If we use git show, is git log necessary?
-  # TODO: Or should we keep only git diff --stat?
-  # TODO: git show is inside here. Does not it repeat the git diff content?
   echo "## Git Context" >> "$REVIEW_FILE"
   echo >> "$REVIEW_FILE"
   cat "$GIT_CTX" >> "$REVIEW_FILE"
