@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# TODO: Add Jira Description using apis
+# TODO: Add PR Description using gh apis
 # TODO: Apply prompt engineering practices to improve its quality
 function aireview() {
   _aireview_help() {
@@ -178,6 +180,108 @@ function aireview() {
     return 0
   }
 
+  # ----- section builders for review file -----
+  _add_header() {
+    echo "# Code Review Request" >> "$REVIEW_FILE"
+    echo >> "$REVIEW_FILE"
+    echo "**Branch/Ref:** ${FROM_REF} → ${TO_REF}" >> "$REVIEW_FILE"
+    echo "**Repository:** ${SSH_URL}" >> "$REVIEW_FILE"
+    echo "**Review Context (working dir):** ${WORK_DIR}" >> "$REVIEW_FILE"
+    echo >> "$REVIEW_FILE"
+    echo "---" >> "$REVIEW_FILE"
+    echo >> "$REVIEW_FILE"
+  }
+
+  _add_repo_structure() {
+    echo "## Repository Structure (Subtree Map)" >> "$REVIEW_FILE"
+    echo >> "$REVIEW_FILE"
+    echo "This is the structure of the repository subtree where changes were made." >> "$REVIEW_FILE"
+    echo >> "$REVIEW_FILE"
+    echo '```' >> "$REVIEW_FILE"
+    cat "$REPO_MAP" >> "$REVIEW_FILE"
+    echo '```' >> "$REVIEW_FILE"
+    echo >> "$REVIEW_FILE"
+    echo "---" >> "$REVIEW_FILE"
+    echo >> "$REVIEW_FILE"
+  }
+
+  _add_full_file_contents() {
+    echo "## Full content of files that were modified, with their lines (at ${TO_REF})" >> "$REVIEW_FILE"
+    echo >> "$REVIEW_FILE"
+
+    while IFS= read -r file; do
+      [[ -z "$file" ]] && continue
+      echo "### \`$file\`" >> "$REVIEW_FILE"
+      if [[ "$file" =~ $LOCKFILE_REGEX ]]; then
+        # Do not dump entire lockfile contents (too large/noisy)
+        echo "_[lockfile content omitted in this section; see truncated diff below]_" >> "$REVIEW_FILE"
+        echo >> "$REVIEW_FILE"
+        continue
+      fi
+      if git cat-file -e "${TO_REF}:${file}" 2>/dev/null; then
+        echo '```' >> "$REVIEW_FILE"
+        git show "${TO_REF}:${file}" 2>/dev/null | cat -n >> "$REVIEW_FILE" \
+          || echo "[Unable to show file content]" >> "$REVIEW_FILE"
+        echo '```' >> "$REVIEW_FILE"
+      else
+        echo "_[deleted or not present in ${TO_REF}]_" >> "$REVIEW_FILE"
+      fi
+      echo >> "$REVIEW_FILE"
+    done <<< "$CHANGED_LIST"
+
+    echo "---" >> "$REVIEW_FILE"
+    echo >> "$REVIEW_FILE"
+  }
+
+  _add_git_diff() {
+    echo "## Git Diff Output (range: ${MERGE_BASE}..${TO_REF})" >> "$REVIEW_FILE"
+    echo >> "$REVIEW_FILE"
+    echo '```diff' >> "$REVIEW_FILE"
+    # Exclude all lock files from the diff using the central list
+    local GIT_DIFF_EXCLUDES=()
+    for f in "${LOCKFILES[@]}"; do
+      GIT_DIFF_EXCLUDES+=(":(exclude)$f")
+      GIT_DIFF_EXCLUDES+=(":(exclude)**/$f")
+    done
+    git diff "$MERGE_BASE" "$TO_REF" -- . "${GIT_DIFF_EXCLUDES[@]}" >> "$REVIEW_FILE" || true
+    echo >> "$REVIEW_FILE"
+    echo "---" >> "$REVIEW_FILE"
+    echo >> "$REVIEW_FILE"
+  }
+
+  _add_git_context() {
+    echo "## Git Context" >> "$REVIEW_FILE"
+    echo >> "$REVIEW_FILE"
+    cat "$GIT_CTX" >> "$REVIEW_FILE"
+    echo >> "$REVIEW_FILE"
+    echo "---" >> "$REVIEW_FILE"
+    echo >> "$REVIEW_FILE"
+  }
+
+  _add_review_guidelines() {
+    # ----- extract review guidelines and code conventions from CLAUDE.md -----
+    local CLAUDE_MD="$HOME/.claude/CLAUDE.md"
+    if [[ ! -f "$CLAUDE_MD" ]]; then
+      echo "Warning: $CLAUDE_MD not found, using fallback review instructions" >&2
+      echo "## Code Review Instructions" >> "$REVIEW_FILE"
+      echo >> "$REVIEW_FILE"
+      echo "Please perform a comprehensive code review following best practices." >> "$REVIEW_FILE"
+    else
+      # Extract CODE section (up to but not including TESTS section)
+      echo "## Code Conventions (Reference)" >> "$REVIEW_FILE"
+      echo >> "$REVIEW_FILE"
+      sed -n '/^## CODE$/,/^## TESTS$/p' "$CLAUDE_MD" | sed '$d' >> "$REVIEW_FILE"
+      echo >> "$REVIEW_FILE"
+      echo "---" >> "$REVIEW_FILE"
+      echo >> "$REVIEW_FILE"
+
+      # Extract REVIEW section (up to but not including RECAP or next ## section)
+      echo "## Code Review Instructions" >> "$REVIEW_FILE"
+      echo >> "$REVIEW_FILE"
+      sed -n '/^## REVIEW$/,/^## RECAP$/p' "$CLAUDE_MD" | sed '$d' >> "$REVIEW_FILE"
+    fi
+  }
+
   if [[ "$1" == "-h" || "$1" == "--help" ]]; then
     _aireview_help
     return 0
@@ -349,98 +453,19 @@ function aireview() {
   local REVIEW_FILE="/tmp/aireview-output-$(date +%s).md"
   : > "$REVIEW_FILE"
 
-  echo "# Code Review Request" >> "$REVIEW_FILE"
-  echo >> "$REVIEW_FILE"
-  echo "**Branch/Ref:** ${FROM_REF} → ${TO_REF}" >> "$REVIEW_FILE"
-  echo "**Repository:** ${SSH_URL}" >> "$REVIEW_FILE"
-  echo "**Review Context (working dir):** ${WORK_DIR}" >> "$REVIEW_FILE"
-  echo >> "$REVIEW_FILE"
-  echo "---" >> "$REVIEW_FILE"
-  echo >> "$REVIEW_FILE"
-
-  echo "## Repository Structure (Subtree Map)" >> "$REVIEW_FILE"
-  echo >> "$REVIEW_FILE"
-  echo "This is the structure of the repository subtree where changes were made." >> "$REVIEW_FILE"
-  echo >> "$REVIEW_FILE"
-  echo '```' >> "$REVIEW_FILE"
-  cat "$REPO_MAP" >> "$REVIEW_FILE"
-  echo '```' >> "$REVIEW_FILE"
-  echo >> "$REVIEW_FILE"
-  echo "---" >> "$REVIEW_FILE"
-  echo >> "$REVIEW_FILE"
-
-  echo "## Full content of files that were modified, with their lines (at ${TO_REF})" >> "$REVIEW_FILE"
-  echo >> "$REVIEW_FILE"
-
-  while IFS= read -r file; do
-    [[ -z "$file" ]] && continue
-    echo "### \`$file\`" >> "$REVIEW_FILE"
-    if [[ "$file" =~ $LOCKFILE_REGEX ]]; then
-      # Do not dump entire lockfile contents (too large/noisy)
-      echo "_[lockfile content omitted in this section; see truncated diff below]_" >> "$REVIEW_FILE"
-      echo >> "$REVIEW_FILE"
-      continue
-    fi
-    if git cat-file -e "${TO_REF}:${file}" 2>/dev/null; then
-      echo '```' >> "$REVIEW_FILE"
-      git show "${TO_REF}:${file}" 2>/dev/null | cat -n >> "$REVIEW_FILE" \
-        || echo "[Unable to show file content]" >> "$REVIEW_FILE"
-      echo '```' >> "$REVIEW_FILE"
-    else
-      echo "_[deleted or not present in ${TO_REF}]_" >> "$REVIEW_FILE"
-    fi
-    echo >> "$REVIEW_FILE"
-  done <<< "$CHANGED_LIST"
-
-  echo "---" >> "$REVIEW_FILE"
-  echo >> "$REVIEW_FILE"
-
-  echo "## Git Diff Output (range: ${MERGE_BASE}..${TO_REF})" >> "$REVIEW_FILE"
-  echo >> "$REVIEW_FILE"
-  echo '```diff' >> "$REVIEW_FILE"
-  # Exclude all lock files from the diff using the central list
-  local GIT_DIFF_EXCLUDES=()
-  for f in "${LOCKFILES[@]}"; do
-    GIT_DIFF_EXCLUDES+=(":(exclude)$f")
-    GIT_DIFF_EXCLUDES+=(":(exclude)**/$f")
-  done
-  git diff "$MERGE_BASE" "$TO_REF" -- . "${GIT_DIFF_EXCLUDES[@]}" >> "$REVIEW_FILE" || true
-  echo >> "$REVIEW_FILE"
-  echo "---" >> "$REVIEW_FILE"
-  echo >> "$REVIEW_FILE"
-
-  echo "## Git Context" >> "$REVIEW_FILE"
-  echo >> "$REVIEW_FILE"
-  cat "$GIT_CTX" >> "$REVIEW_FILE"
-  echo >> "$REVIEW_FILE"
-  echo "---" >> "$REVIEW_FILE"
-  echo >> "$REVIEW_FILE"
-
-  # TODO: Add PR Description using gh apis
-
-  # TODO: Add Jira Description using apis
-
-  # ----- extract review guidelines and code conventions from CLAUDE.md -----
-  local CLAUDE_MD="$HOME/.claude/CLAUDE.md"
-  if [[ ! -f "$CLAUDE_MD" ]]; then
-    echo "Warning: $CLAUDE_MD not found, using fallback review instructions" >&2
-    echo "## Code Review Instructions" >> "$REVIEW_FILE"
-    echo >> "$REVIEW_FILE"
-    echo "Please perform a comprehensive code review following best practices." >> "$REVIEW_FILE"
-  else
-    # Extract CODE section (up to but not including TESTS section)
-    echo "## Code Conventions (Reference)" >> "$REVIEW_FILE"
-    echo >> "$REVIEW_FILE"
-    sed -n '/^## CODE$/,/^## TESTS$/p' "$CLAUDE_MD" | sed '$d' >> "$REVIEW_FILE"
-    echo >> "$REVIEW_FILE"
-    echo "---" >> "$REVIEW_FILE"
-    echo >> "$REVIEW_FILE"
-
-    # Extract REVIEW section (up to but not including RECAP or next ## section)
-    echo "## Code Review Instructions" >> "$REVIEW_FILE"
-    echo >> "$REVIEW_FILE"
-    sed -n '/^## REVIEW$/,/^## RECAP$/p' "$CLAUDE_MD" | sed '$d' >> "$REVIEW_FILE"
-  fi
+  # Build review file in sections (order optimized for LLM prompt engineering)
+  # 1. Header with metadata
+  _add_header
+  # 2. Review instructions first - primes the AI with evaluation criteria
+  _add_review_guidelines
+  # 3. Git context early - provides WHAT changed and WHY (commit messages, stats)
+  _add_git_context
+  # 4. Git diff - shows HOW things changed (focused, relevant changes)
+  _add_git_diff
+  # 5. Repository structure - WHERE changes fit in the codebase
+  _add_repo_structure
+  # 6. Full file contents last - deep context (most token-expensive, comes last)
+  _add_full_file_contents
 
   # ----- estimate and log tokens -----
   local estimated_tokens
