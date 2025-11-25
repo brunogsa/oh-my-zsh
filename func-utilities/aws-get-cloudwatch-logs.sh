@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# TODO: Add an optional --output-file <file> to it, so it append there instead of doing so on a tmp file
 function aws-get-cloudwatch-logs() {
   # Show help
   if [[ "$1" == "-h" || "$1" == "--help" || "$1" == "-v" || "$1" == "--version" ]]; then
