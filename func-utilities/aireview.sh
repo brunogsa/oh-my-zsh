@@ -1,7 +1,6 @@
 #!/bin/bash
 
 # TODO: Add Jira Description using apis
-# TODO: Add PR Description using gh apis
 # TODO: Apply prompt engineering practices to improve its quality
 function aireview() {
   _aireview_help() {
@@ -9,16 +8,21 @@ function aireview() {
     echo
     echo "Usage:"
     echo "  aireview <from_ref_or_base_branch> <to_ref_or_feature_branch>"
+    echo "  aireview --github <pr_url>"
     echo "  aireview -h | --help"
     echo
     echo "Examples:"
     echo "  aireview main feature/new-api"
     echo "  aireview develop bugfix/fix-npe"
+    echo "  aireview --github https://github.com/owner/repo/pull/123"
     echo
     echo "Requirements:"
     echo "  - Run inside a git repository"
     echo "  - SSH access configured for the repo remote (extracted from .git/config)"
     echo "  - Aider optional (repo map); falls back gracefully"
+    echo "  - For --github mode: GitHub CLI (gh) installed and authenticated"
+    echo "    Install: brew install gh"
+    echo "    Authenticate: gh auth login"
   }
 
   _to_ssh() {
@@ -134,6 +138,84 @@ function aireview() {
     fi
   }
 
+  # ----- GitHub PR helpers -----
+  _parse_pr_url() {
+    local url="$1"
+    # Match patterns like:
+    # https://github.com/owner/repo/pull/123
+    # https://github.com/owner/repo/pull/123/files
+
+    # Remove potential trailing slashes and /files suffix
+    url="${url%/}"
+    url="${url%/files}"
+
+    # Basic validation
+    if ! echo "$url" | grep -qE '^https://github\.com/[^/]+/[^/]+/pull/[0-9]+'; then
+      echo "Error: Invalid GitHub PR URL format. Expected: https://github.com/owner/repo/pull/NUMBER" >&2
+      echo "Got: $url" >&2
+      return 1
+    fi
+
+    # Extract components using parameter expansion (works in both bash and zsh)
+    local remainder="${url#https://github.com/}"  # Remove prefix
+    local owner="${remainder%%/*}"                 # Extract owner (everything before first /)
+    remainder="${remainder#*/}"                    # Remove owner/
+    local repo="${remainder%%/*}"                  # Extract repo (everything before first /)
+    remainder="${remainder#*/pull/}"               # Remove repo/pull/
+    local pr_num="${remainder%%/*}"                # Extract PR number (everything before next / or end)
+
+    # Validate that all components were extracted
+    if [[ -n "$owner" && -n "$repo" && -n "$pr_num" ]]; then
+      echo "$owner $repo $pr_num"
+      return 0
+    else
+      echo "Error: Failed to parse GitHub PR URL" >&2
+      echo "Got: $url" >&2
+      return 1
+    fi
+  }
+
+  _fetch_pr_data() {
+    local owner="$1"
+    local repo="$2"
+    local pr_number="$3"
+
+    # Check if gh is installed
+    if ! command -v gh >/dev/null 2>&1; then
+      echo "Error: GitHub CLI (gh) is not installed." >&2
+      echo "Install with: brew install gh" >&2
+      return 1
+    fi
+
+    # Check if authenticated
+    if ! gh auth status >/dev/null 2>&1; then
+      echo "Error: GitHub CLI is not authenticated." >&2
+      echo "Authenticate with: gh auth login" >&2
+      return 1
+    fi
+
+    # Fetch each field separately using --jq to avoid JSON parsing issues with control characters
+    local base_ref head_ref pr_title pr_body
+    base_ref=$(gh pr view "$pr_number" --repo "${owner}/${repo}" --json baseRefName --jq '.baseRefName' 2>&1)
+    head_ref=$(gh pr view "$pr_number" --repo "${owner}/${repo}" --json headRefName --jq '.headRefName' 2>&1)
+    pr_title=$(gh pr view "$pr_number" --repo "${owner}/${repo}" --json title --jq '.title' 2>&1)
+    pr_body=$(gh pr view "$pr_number" --repo "${owner}/${repo}" --json body --jq '.body // ""' 2>&1)
+
+    if [[ $? -ne 0 ]]; then
+      echo "Error: Failed to fetch PR data" >&2
+      return 1
+    fi
+
+    # Return values separated by a delimiter that won't appear in the data
+    # We'll use a special marker
+    echo "BASE_REF=${base_ref}"
+    echo "HEAD_REF=${head_ref}"
+    echo "PR_TITLE=${pr_title}"
+    echo "---PR_BODY_START---"
+    echo "$pr_body"
+    echo "---PR_BODY_END---"
+    return 0
+  }
 
   # ----- clipboard helpers (split copy & verify) -----
   local COPIED_WITH=""
@@ -258,6 +340,26 @@ function aireview() {
     echo >> "$REVIEW_FILE"
   }
 
+  _add_pr_description() {
+    # Only add PR description if it was fetched (--github mode)
+    if [[ -z "$PR_TITLE" ]]; then
+      return 0
+    fi
+
+    echo "## Pull Request Description" >> "$REVIEW_FILE"
+    echo >> "$REVIEW_FILE"
+    echo "**PR #${PR_NUMBER}: ${PR_TITLE}**" >> "$REVIEW_FILE"
+    echo >> "$REVIEW_FILE"
+    if [[ -n "$PR_BODY" ]]; then
+      echo "$PR_BODY" >> "$REVIEW_FILE"
+    else
+      echo "_[No description provided]_" >> "$REVIEW_FILE"
+    fi
+    echo >> "$REVIEW_FILE"
+    echo "---" >> "$REVIEW_FILE"
+    echo >> "$REVIEW_FILE"
+  }
+
   _add_review_guidelines() {
     # ----- extract review guidelines and code conventions from CLAUDE.md -----
     local CLAUDE_MD="$HOME/.claude/CLAUDE.md"
@@ -286,15 +388,63 @@ function aireview() {
     _aireview_help
     return 0
   fi
-  if [[ $# -ne 2 ]]; then
-    echo "Error: Incorrect number of arguments" >&2
-    echo
-    _aireview_help
-    return 1
-  fi
 
-  local FROM_REF_IN="$1"   # matches `git diff` order: from/base
-  local TO_REF_IN="$2"     # to/feature
+  # Parse arguments based on mode
+  local FROM_REF_IN TO_REF_IN PR_TITLE PR_BODY PR_NUMBER
+  local GITHUB_MODE=false
+
+  if [[ "$1" == "--github" ]]; then
+    # GitHub PR mode
+    if [[ $# -ne 2 ]]; then
+      echo "Error: --github requires a PR URL" >&2
+      echo
+      _aireview_help
+      return 1
+    fi
+
+    GITHUB_MODE=true
+    local pr_url="$2"
+
+    # Parse PR URL
+    local pr_info owner repo
+    pr_info=$(_parse_pr_url "$pr_url") || return 1
+    read -r owner repo PR_NUMBER <<< "$pr_info"
+
+    # Validate extracted values
+    if [[ -z "$owner" || -z "$repo" || -z "$PR_NUMBER" ]]; then
+      echo "Error: Failed to extract PR information from URL" >&2
+      echo "Owner: '$owner', Repo: '$repo', PR#: '$PR_NUMBER'" >&2
+      return 1
+    fi
+
+    echo "Fetching PR #${PR_NUMBER} from ${owner}/${repo}..."
+
+    # Fetch PR data
+    local pr_data
+    pr_data=$(_fetch_pr_data "$owner" "$repo" "$PR_NUMBER") || return 1
+
+    # Parse the response format
+    FROM_REF_IN=$(echo "$pr_data" | grep '^BASE_REF=' | cut -d= -f2-)
+    TO_REF_IN=$(echo "$pr_data" | grep '^HEAD_REF=' | cut -d= -f2-)
+    PR_TITLE=$(echo "$pr_data" | grep '^PR_TITLE=' | cut -d= -f2-)
+    # Extract PR body between markers
+    PR_BODY=$(echo "$pr_data" | sed -n '/^---PR_BODY_START---$/,/^---PR_BODY_END---$/p' | sed '1d;$d')
+
+    echo "Base ref: $FROM_REF_IN"
+    echo "Head ref: $TO_REF_IN"
+    echo "PR title: $PR_TITLE"
+  else
+    # Traditional two-argument mode
+    if [[ $# -ne 2 ]]; then
+      echo "Error: Incorrect number of arguments" >&2
+      echo
+      _aireview_help
+      return 1
+    fi
+
+    FROM_REF_IN="$1"   # matches `git diff` order: from/base
+    TO_REF_IN="$2"     # to/feature
+  fi
 
   # Save original directory for cleanup
   local ORIGINAL_DIR="$(pwd)"
@@ -458,13 +608,15 @@ function aireview() {
   _add_header
   # 2. Review instructions first - primes the AI with evaluation criteria
   _add_review_guidelines
-  # 3. Git context early - provides WHAT changed and WHY (commit messages, stats)
+  # 3. PR description (if in --github mode) - high-level context about the changes
+  _add_pr_description
+  # 4. Git context early - provides WHAT changed and WHY (commit messages, stats)
   _add_git_context
-  # 4. Git diff - shows HOW things changed (focused, relevant changes)
+  # 5. Git diff - shows HOW things changed (focused, relevant changes)
   _add_git_diff
-  # 5. Repository structure - WHERE changes fit in the codebase
+  # 6. Repository structure - WHERE changes fit in the codebase
   _add_repo_structure
-  # 6. Full file contents last - deep context (most token-expensive, comes last)
+  # 7. Full file contents last - deep context (most token-expensive, comes last)
   _add_full_file_contents
 
   # ----- estimate and log tokens -----
