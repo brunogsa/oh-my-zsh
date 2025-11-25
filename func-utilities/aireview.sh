@@ -1,28 +1,37 @@
 #!/bin/bash
 
-# TODO: Add Jira Description using apis
 # TODO: Apply prompt engineering practices to improve its quality
 function aireview() {
   _aireview_help() {
     echo "aireview - Prepare code review context for AI analysis"
     echo
     echo "Usage:"
-    echo "  aireview <from_ref_or_base_branch> <to_ref_or_feature_branch>"
-    echo "  aireview --github <pr_url>"
+    echo "  aireview <from_ref_or_base_branch> <to_ref_or_feature_branch> [--jira <jira_card_url>]"
+    echo "  aireview --github <pr_url> [--jira <jira_card_url>]"
     echo "  aireview -h | --help"
     echo
     echo "Examples:"
     echo "  aireview main feature/new-api"
-    echo "  aireview develop bugfix/fix-npe"
+    echo "  aireview main feature/new-api --jira https://company.atlassian.net/browse/PROJ-123"
     echo "  aireview --github https://github.com/owner/repo/pull/123"
+    echo "  aireview --github https://github.com/owner/repo/pull/123 --jira https://company.atlassian.net/browse/PROJ-456"
     echo
     echo "Requirements:"
     echo "  - Run inside a git repository"
     echo "  - SSH access configured for the repo remote (extracted from .git/config)"
     echo "  - Aider optional (repo map); falls back gracefully"
-    echo "  - For --github mode: GitHub CLI (gh) installed and authenticated"
-    echo "    Install: brew install gh"
-    echo "    Authenticate: gh auth login"
+    echo
+    echo "  For --github mode:"
+    echo "    - GitHub CLI (gh) installed and authenticated"
+    echo "      Install: brew install gh"
+    echo "      Authenticate: gh auth login"
+    echo
+    echo "  For --jira mode:"
+    echo "    - Required environment variables:"
+    echo "      export JIRA_URL='https://yourcompany.atlassian.net'"
+    echo "      export JIRA_EMAIL='your.email@company.com'"
+    echo "      export JIRA_API_TOKEN='your-api-token'"
+    echo "    - Get API token at: https://id.atlassian.com/manage-profile/security/api-tokens"
   }
 
   _to_ssh() {
@@ -217,6 +226,89 @@ function aireview() {
     return 0
   }
 
+  # ----- Jira helpers -----
+  _parse_jira_url() {
+    local url="$1"
+    # Match patterns like:
+    # https://company.atlassian.net/browse/PROJ-123
+    # Extract issue key (PROJ-123)
+    local issue_key
+    issue_key=$(echo "$url" | sed -n 's|.*/browse/\([A-Z][A-Z0-9]*-[0-9][0-9]*\).*|\1|p')
+
+    if [[ -z "$issue_key" ]]; then
+      echo "Error: Invalid Jira URL format. Expected: https://company.atlassian.net/browse/PROJ-123" >&2
+      echo "Got: $url" >&2
+      return 1
+    fi
+
+    echo "$issue_key"
+    return 0
+  }
+
+  _fetch_jira_data() {
+    local issue_key="$1"
+
+    # Check required environment variables
+    if [[ -z "$JIRA_URL" ]]; then
+      echo "Error: JIRA_URL environment variable is not set." >&2
+      echo "Set with: export JIRA_URL='https://yourcompany.atlassian.net'" >&2
+      return 1
+    fi
+
+    if [[ -z "$JIRA_EMAIL" ]]; then
+      echo "Error: JIRA_EMAIL environment variable is not set." >&2
+      echo "Set with: export JIRA_EMAIL='your.email@company.com'" >&2
+      return 1
+    fi
+
+    if [[ -z "$JIRA_API_TOKEN" ]]; then
+      echo "Error: JIRA_API_TOKEN environment variable is not set." >&2
+      echo "Set with: export JIRA_API_TOKEN='your-api-token'" >&2
+      echo "Get token at: https://id.atlassian.com/manage-profile/security/api-tokens" >&2
+      return 1
+    fi
+
+    # Fetch issue data using Jira REST API
+    local api_url="${JIRA_URL}/rest/api/3/issue/${issue_key}?fields=summary,description,parent"
+    local response
+
+    response=$(curl -s -u "${JIRA_EMAIL}:${JIRA_API_TOKEN}" \
+      -H "Accept: application/json" \
+      "$api_url" 2>&1)
+
+    if [[ $? -ne 0 ]]; then
+      echo "Error: Failed to fetch Jira data: $response" >&2
+      return 1
+    fi
+
+    # Check for error in response
+    if echo "$response" | grep -q '"errorMessages"'; then
+      echo "Error: Jira API returned an error: $response" >&2
+      return 1
+    fi
+
+    # Extract fields
+    local summary description epic_key epic_summary
+    summary=$(echo "$response" | jq -r '.fields.summary // ""')
+    description=$(echo "$response" | jq -r '.fields.description // ""')
+
+    # Try to get epic (parent field)
+    epic_key=$(echo "$response" | jq -r '.fields.parent.key // ""')
+    epic_summary=$(echo "$response" | jq -r '.fields.parent.fields.summary // ""')
+
+    # Return values in custom format
+    echo "ISSUE_KEY=${issue_key}"
+    echo "SUMMARY=${summary}"
+    echo "---DESCRIPTION_START---"
+    echo "$description"
+    echo "---DESCRIPTION_END---"
+    if [[ -n "$epic_key" ]]; then
+      echo "EPIC_KEY=${epic_key}"
+      echo "EPIC_SUMMARY=${epic_summary}"
+    fi
+    return 0
+  }
+
   # ----- clipboard helpers (split copy & verify) -----
   local COPIED_WITH=""
 
@@ -363,6 +455,34 @@ function aireview() {
     echo >> "$REVIEW_FILE"
   }
 
+  _add_jira_card() {
+    # Only add Jira card if it was fetched (--jira mode)
+    if [[ -z "$JIRA_ISSUE_KEY" ]]; then
+      return 0
+    fi
+
+    echo "## Jira Card Information" >> "$REVIEW_FILE"
+    echo >> "$REVIEW_FILE"
+    echo "**Issue: ${JIRA_ISSUE_KEY} - ${JIRA_SUMMARY}**" >> "$REVIEW_FILE"
+    echo >> "$REVIEW_FILE"
+
+    if [[ -n "$JIRA_EPIC_KEY" ]]; then
+      echo "**Epic:** ${JIRA_EPIC_KEY} - ${JIRA_EPIC_SUMMARY}" >> "$REVIEW_FILE"
+      echo >> "$REVIEW_FILE"
+    fi
+
+    echo "### Description" >> "$REVIEW_FILE"
+    echo >> "$REVIEW_FILE"
+    if [[ -n "$JIRA_DESCRIPTION" ]]; then
+      echo "$JIRA_DESCRIPTION" >> "$REVIEW_FILE"
+    else
+      echo "_[No description provided]_" >> "$REVIEW_FILE"
+    fi
+    echo >> "$REVIEW_FILE"
+    echo "---" >> "$REVIEW_FILE"
+    echo >> "$REVIEW_FILE"
+  }
+
   _add_review_guidelines() {
     # ----- extract review guidelines and code conventions from CLAUDE.md -----
     local CLAUDE_MD="$HOME/.claude/CLAUDE.md"
@@ -394,12 +514,14 @@ function aireview() {
 
   # Parse arguments based on mode
   local FROM_REF_IN TO_REF_IN PR_TITLE PR_BODY PR_NUMBER
-  local GITHUB_MODE=false
+  local JIRA_ISSUE_KEY JIRA_SUMMARY JIRA_DESCRIPTION JIRA_EPIC_KEY JIRA_EPIC_SUMMARY
+  local GITHUB_MODE=false JIRA_MODE=false
+  local jira_url=""
 
   if [[ "$1" == "--github" ]]; then
-    # GitHub PR mode
-    if [[ $# -ne 2 ]]; then
-      echo "Error: --github requires a PR URL" >&2
+    # GitHub PR mode (with optional --jira)
+    if [[ $# -lt 2 || $# -gt 4 ]]; then
+      echo "Error: --github requires a PR URL (optionally with --jira <url>)" >&2
       echo
       _aireview_help
       return 1
@@ -407,6 +529,16 @@ function aireview() {
 
     GITHUB_MODE=true
     local pr_url="$2"
+
+    # Check for optional --jira flag
+    if [[ "$3" == "--jira" ]]; then
+      if [[ -z "$4" ]]; then
+        echo "Error: --jira requires a URL" >&2
+        return 1
+      fi
+      JIRA_MODE=true
+      jira_url="$4"
+    fi
 
     # Parse PR URL
     local pr_info owner repo
@@ -437,9 +569,9 @@ function aireview() {
     echo "Head ref: $TO_REF_IN"
     echo "PR title: $PR_TITLE"
   else
-    # Traditional two-argument mode
-    if [[ $# -ne 2 ]]; then
-      echo "Error: Incorrect number of arguments" >&2
+    # Traditional two-argument mode (with optional --jira)
+    if [[ $# -lt 2 || $# -gt 4 ]]; then
+      echo "Error: Requires two refs (optionally with --jira <url>)" >&2
       echo
       _aireview_help
       return 1
@@ -447,6 +579,37 @@ function aireview() {
 
     FROM_REF_IN="$1"   # matches `git diff` order: from/base
     TO_REF_IN="$2"     # to/feature
+
+    # Check for optional --jira flag
+    if [[ "$3" == "--jira" ]]; then
+      if [[ -z "$4" ]]; then
+        echo "Error: --jira requires a URL" >&2
+        return 1
+      fi
+      JIRA_MODE=true
+      jira_url="$4"
+    fi
+  fi
+
+  # Fetch Jira data if --jira was provided
+  if [[ "$JIRA_MODE" == true ]]; then
+    local issue_key
+    issue_key=$(_parse_jira_url "$jira_url") || return 1
+
+    echo "Fetching Jira issue ${issue_key}..."
+
+    local jira_data
+    jira_data=$(_fetch_jira_data "$issue_key") || return 1
+
+    # Parse the response format
+    JIRA_ISSUE_KEY=$(echo "$jira_data" | grep '^ISSUE_KEY=' | cut -d= -f2-)
+    JIRA_SUMMARY=$(echo "$jira_data" | grep '^SUMMARY=' | cut -d= -f2-)
+    JIRA_EPIC_KEY=$(echo "$jira_data" | grep '^EPIC_KEY=' | cut -d= -f2-)
+    JIRA_EPIC_SUMMARY=$(echo "$jira_data" | grep '^EPIC_SUMMARY=' | cut -d= -f2-)
+    # Extract description between markers
+    JIRA_DESCRIPTION=$(echo "$jira_data" | sed -n '/^---DESCRIPTION_START---$/,/^---DESCRIPTION_END---$/p' | sed '1d;$d')
+
+    echo "Jira issue: $JIRA_ISSUE_KEY - $JIRA_SUMMARY"
   fi
 
   # Save original directory for cleanup
@@ -623,13 +786,15 @@ function aireview() {
   _add_review_guidelines
   # 3. PR description (if in --github mode) - high-level context about the changes
   _add_pr_description
-  # 4. Git context early - provides WHAT changed and WHY (commit messages, stats)
+  # 4. Jira card (if in --jira mode) - business context about the task/feature
+  _add_jira_card
+  # 5. Git context early - provides WHAT changed and WHY (commit messages, stats)
   _add_git_context
-  # 5. Git diff - shows HOW things changed (focused, relevant changes)
+  # 6. Git diff - shows HOW things changed (focused, relevant changes)
   _add_git_diff
-  # 6. Repository structure - WHERE changes fit in the codebase
+  # 7. Repository structure - WHERE changes fit in the codebase
   _add_repo_structure
-  # 7. Full file contents last - deep context (most token-expensive, comes last)
+  # 8. Full file contents last - deep context (most token-expensive, comes last)
   _add_full_file_contents
 
   # ----- estimate and log tokens -----
