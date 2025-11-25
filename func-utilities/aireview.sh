@@ -269,17 +269,22 @@ function aireview() {
     fi
 
     # Fetch issue data using Jira REST API
-    local api_url="${JIRA_URL}/rest/api/3/issue/${issue_key}?fields=summary,description,parent"
+    # Use expand=renderedFields to get HTML instead of ADF JSON
+    local api_url="${JIRA_URL}/rest/api/3/issue/${issue_key}?fields=summary,description,parent&expand=renderedFields"
     local response
 
-    response=$(curl -s -u "${JIRA_EMAIL}:${JIRA_API_TOKEN}" \
+    local raw_response
+    raw_response=$(curl -s -u "${JIRA_EMAIL}:${JIRA_API_TOKEN}" \
       -H "Accept: application/json" \
       "$api_url" 2>&1)
 
     if [[ $? -ne 0 ]]; then
-      echo "Error: Failed to fetch Jira data: $response" >&2
+      echo "Error: Failed to fetch Jira data: $raw_response" >&2
       return 1
     fi
+
+    # Strip control characters before parsing with jq (to avoid parse errors)
+    response=$(echo "$raw_response" | tr -d '\000-\037' | tr -d '\177')
 
     # Check for error in response
     if echo "$response" | grep -q '"errorMessages"'; then
@@ -290,7 +295,28 @@ function aireview() {
     # Extract fields
     local summary description epic_key epic_summary
     summary=$(echo "$response" | jq -r '.fields.summary // ""')
-    description=$(echo "$response" | jq -r '.fields.description // ""')
+
+    # Get rendered description (HTML) and convert to plain text with formatting
+    description=$(echo "$response" | jq -r '.renderedFields.description // ""' | \
+      sed -e 's|</p>|\n\n|g' \
+          -e 's|</div>|\n|g' \
+          -e 's|<br[^>]*>|\n|g' \
+          -e 's|</li>|\n|g' \
+          -e 's|<li>|- |g' \
+          -e 's|<h3[^>]*>|### |g' \
+          -e 's|</h3>|\n|g' \
+          -e 's|<h2[^>]*>|## |g' \
+          -e 's|</h2>|\n|g' \
+          -e 's|<h1[^>]*>|# |g' \
+          -e 's|</h1>|\n|g' \
+          -e 's|<[^>]*>||g' \
+          -e 's/&nbsp;/ /g' \
+          -e 's/&lt;/</g' \
+          -e 's/&gt;/>/g' \
+          -e 's/&amp;/\&/g' \
+          -e 's/&quot;/"/g' | \
+      sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | \
+      sed '/^$/N;/^\n$/D')
 
     # Try to get epic (parent field)
     epic_key=$(echo "$response" | jq -r '.fields.parent.key // ""')
