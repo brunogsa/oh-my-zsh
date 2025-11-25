@@ -575,6 +575,16 @@ function aireview() {
     return 1
   }
 
+  # Ensure WORK_DIR is a directory (not a file)
+  if [[ -f "$WORK_DIR" ]]; then
+    WORK_DIR="$(dirname "$WORK_DIR")"
+  fi
+
+  # Default to repo root if WORK_DIR doesn't exist or is empty
+  if [[ -z "$WORK_DIR" || ! -d "$WORK_DIR" ]]; then
+    WORK_DIR="."
+  fi
+
   cd "$WORK_DIR" || { echo "Failed to cd to $WORK_DIR"; cd "$ORIGINAL_DIR"; return 1; }
 
   echo "Longest common directory found: $WORK_DIR"
