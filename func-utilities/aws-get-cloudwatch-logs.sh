@@ -156,10 +156,17 @@ function aws-get-cloudwatch-logs() {
   fi
 
   # Initialize variables for pagination
+  # NOTE: Variables used inside the loop must be declared here (not inside the loop)
+  # to avoid zsh trace output issues when re-declaring local variables
   local next_token=""
   local prev_token=""
   local page_count=0
   local total_events=0
+  local aws_cmd_args=()
+  local response=""
+  local aws_exit_code=0
+  local event_count=0
+  local parsed_output=""
 
   # Pagination loop
   while true; do
@@ -169,7 +176,7 @@ function aws-get-cloudwatch-logs() {
     fi
 
     # Build AWS CLI command
-    local aws_cmd_args=(
+    aws_cmd_args=(
       "logs" "filter-log-events"
       "--log-group-name" "$log_group"
       "--start-time" "$start_time"
@@ -188,9 +195,8 @@ function aws-get-cloudwatch-logs() {
     fi
 
     # Execute command and capture response (filter out CFPropertyList warnings)
-    local response
     response=$(AWS_PROFILE=${AWS_PROFILE} aws "${aws_cmd_args[@]}" 2> >(grep -v "CFPropertyList" >&2))
-    local aws_exit_code=$?
+    aws_exit_code=$?
 
     if [[ $aws_exit_code -ne 0 ]]; then
       echo "Error: AWS CLI command failed with exit code $aws_exit_code: ${response}"
@@ -198,7 +204,7 @@ function aws-get-cloudwatch-logs() {
     fi
 
     # Extract event count
-    local event_count=$(echo "$response" | grep eventId | wc -l)
+    event_count=$(echo "$response" | grep eventId | wc -l)
 
     if [[ -z "$event_count" || "$event_count" == "null" ]]; then
       echo "Error: Invalid response from AWS CLI"
@@ -214,8 +220,7 @@ function aws-get-cloudwatch-logs() {
 
     # Output parsed message content (one JSON per line)
     if [[ "$event_count" -gt 0 ]]; then
-      local parsed_output
-      parsed_output=$(echo "$_aws_resp" | egrep '"message": "{' | grep -o '{.*' | sed 's/\\"/"/g' | sed 's/\\//g')
+      parsed_output=$(echo "$response" | egrep '"message": "{' | grep -o '{.*' | sed 's/\\"/"/g' | sed 's/\\//g')
       if [[ "$stdout_only" == true ]]; then
         echo "$parsed_output"
       elif [[ -n "$logfile" ]]; then
