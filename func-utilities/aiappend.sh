@@ -77,7 +77,7 @@ function aiappend() {
   }
 
   # Default location for the global Aider context file
-  local CONTEXT_FILE="${HOME}/.ai-context"
+  local CONTEXT_FILE="${HOME}/.claude/CLAUDE.md"
 
   # Create context file if it doesn't exist
   if [[ ! -f "$CONTEXT_FILE" ]]; then
