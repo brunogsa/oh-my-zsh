@@ -203,8 +203,8 @@ function aws-get-cloudwatch-logs() {
       return 1
     fi
 
-    # Extract event count
-    event_count=$(echo "$response" | grep eventId | wc -l)
+    # Extract event count (grep -c outputs 0 when no matches, but returns exit code 1, so we ignore it)
+    event_count=$(echo "$response" | grep -c eventId) || true
 
     if [[ -z "$event_count" || "$event_count" == "null" ]]; then
       echo "Error: Invalid response from AWS CLI"
