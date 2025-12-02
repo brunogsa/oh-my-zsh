@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# TODO: Add an optional --output-file <file> to it, so it append there instead of doing so on a tmp file
 function aws-get-cloudwatch-logs() {
   # Show help
   if [[ "$1" == "-h" || "$1" == "--help" || "$1" == "-v" || "$1" == "--version" ]]; then
@@ -16,6 +15,8 @@ function aws-get-cloudwatch-logs() {
     echo "  --end-date <datetime>     - (Optional) End time in UTC ISO8601 format (defaults to now)"
     echo "  --filter <pattern>        - (Optional) CloudWatch Logs filter pattern"
     echo "                              Example: \"{ \$.flow = 'nse-sales-agreements-cdc' && \$.level = 'error' }\""
+    echo "  --output <file>           - (Optional) Output file path (appends results to this file)"
+    echo "  --stdout                  - (Optional) Print results to stdout only (no file output, no debug info)"
     echo
     echo "Environment:"
     echo "  AWS_PROFILE              - AWS profile to use (required)"
@@ -45,6 +46,8 @@ function aws-get-cloudwatch-logs() {
   local start_date=""
   local end_date=""
   local filter_pattern=""
+  local output_file=""
+  local stdout_only=false
 
   while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -63,6 +66,14 @@ function aws-get-cloudwatch-logs() {
       --filter)
         filter_pattern="$2"
         shift 2
+        ;;
+      --output)
+        output_file="$2"
+        shift 2
+        ;;
+      --stdout)
+        stdout_only=true
+        shift
         ;;
       *)
         echo "Error: Unknown parameter '$1'" >&2
@@ -117,19 +128,32 @@ function aws-get-cloudwatch-logs() {
     end_time=$(($(date +%s) * 1000))
   fi
 
-  # Generate output filename with timestamp
-  local timestamp=$(date +%Y%m%d_%H%M%S)
-  local logfile="/tmp/aws-cloudwatch-logs-${timestamp}.log"
-  touch $logfile
+  # Determine output destination
+  local logfile=""
+  if [[ "$stdout_only" == true ]]; then
+    logfile=""
+  elif [[ -n "$output_file" ]]; then
+    logfile="$output_file"
+    touch "$logfile"
+  else
+    local timestamp=$(date +%Y%m%d_%H%M%S)
+    logfile="/tmp/aws-cloudwatch-logs-${timestamp}.log"
+    touch "$logfile"
+  fi
 
-  echo "Fetching logs from CloudWatch..."
-  echo "Log Group: $log_group"
-  echo "Start Date: $start_date"
-  echo "End Date: ${end_date:-now}"
-  echo "Filter: ${filter_pattern:-none}"
-  echo "AWS Profile: $AWS_PROFILE"
-  echo "Output File: $logfile"
-  echo
+  # Print debug info (unless --stdout mode)
+  if [[ "$stdout_only" != true ]]; then
+    echo "Fetching logs from CloudWatch..."
+    echo "Log Group: $log_group"
+    echo "Start Date: $start_date"
+    echo "End Date: ${end_date:-now}"
+    echo "Filter: ${filter_pattern:-none}"
+    echo "AWS Profile: $AWS_PROFILE"
+    if [[ -n "$logfile" ]]; then
+      echo "Output File: $logfile"
+    fi
+    echo
+  fi
 
   # Initialize variables for pagination
   local next_token=""
@@ -140,7 +164,9 @@ function aws-get-cloudwatch-logs() {
   # Pagination loop
   while true; do
     ((page_count++))
-    echo "Fetching page $page_count..."
+    if [[ "$stdout_only" != true ]]; then
+      echo "Fetching page $page_count..."
+    fi
 
     # Build AWS CLI command
     local aws_cmd_args=(
@@ -182,11 +208,19 @@ function aws-get-cloudwatch-logs() {
     fi
 
     ((total_events += event_count))
-    echo "  Found $event_count events in this page (total until now: $total_events)"
+    if [[ "$stdout_only" != true ]]; then
+      echo "  Found $event_count events in this page (total until now: $total_events)"
+    fi
 
     # Output parsed message content (one JSON per line)
     if [[ "$event_count" -gt 0 ]]; then
-      echo "$response" | egrep '"message": "{' | grep -o '{.*' | sed 's/\\"/"/g' | sed 's/\\//g' >> $logfile
+      local parsed_output
+      parsed_output=$(echo "$_aws_resp" | egrep '"message": "{' | grep -o '{.*' | sed 's/\\"/"/g' | sed 's/\\//g')
+      if [[ "$stdout_only" == true ]]; then
+        echo "$parsed_output"
+      elif [[ -n "$logfile" ]]; then
+        echo "$parsed_output" >> "$logfile"
+      fi
     fi
 
     # Extract the new next token
@@ -194,15 +228,23 @@ function aws-get-cloudwatch-logs() {
 
     # Check if no more tokens or token unchanged
     if [[ -z "$next_token" ]]; then
-      echo "No more pages. Pagination complete."
+      if [[ "$stdout_only" != true ]]; then
+        echo "No more pages. Pagination complete."
+      fi
       break
     fi
 
-    echo "  Next token found (${next_token}), continuing..."
+    if [[ "$stdout_only" != true ]]; then
+      echo "  Next token found (${next_token}), continuing..."
+    fi
   done
 
-  echo
-  echo "Complete!"
-  echo "Total events fetched: $total_events"
-  echo "Output File: $logfile"
+  if [[ "$stdout_only" != true ]]; then
+    echo
+    echo "Complete!"
+    echo "Total events fetched: $total_events"
+    if [[ -n "$logfile" ]]; then
+      echo "Output File: $logfile"
+    fi
+  fi
 }
