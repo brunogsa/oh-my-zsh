@@ -24,6 +24,7 @@
 export ZSH="$HOME/.oh-my-zsh"
 
 # Detect operating system (sourced early for use throughout config)
+source "$HOME/oh-my-zsh/func-utilities/detect-os.sh"
 OS_TYPE=$(detect_os)
 
 # Set name of the theme to load. Optionally, if you set this to "random"
