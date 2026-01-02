@@ -78,7 +78,7 @@ Run installation scripts in order:
 ### Dependencies
 
 Required external tools:
-- `brew` (macOS package manager)
+- `brew` (macOS) or `apt-get` (Linux) - package managers
 - `nvim` (Neovim - aliased as vim)
 - `rg` (ripgrep - configured with custom exclusions)
 - `fzf` (fuzzy finder)
@@ -88,7 +88,55 @@ Required external tools:
 - `meld` (diff viewer)
 - `mmdc` (Mermaid CLI)
 - `aws` CLI (for CloudWatch functions)
-- Optional: `copyq`, `pbcopy`/`pbpaste`, `wl-copy`/`wl-paste`, `xclip` for clipboard
+- `copyq` (cross-platform clipboard manager)
+
+## Platform Support
+
+This configuration supports both macOS and Linux.
+
+### OS Detection
+
+The `detect-os.sh` utility automatically detects the operating system:
+- `macos` - macOS systems
+- `linux` - Linux systems
+
+Usage:
+```bash
+source ~/oh-my-zsh/func-utilities/detect-os.sh
+OS_TYPE=$(detect_os)
+```
+
+### Platform-Specific Behavior
+
+**Package Management:**
+- macOS: Uses `brew`
+- Linux: Uses `apt-get`
+
+**Clipboard:**
+- Both platforms use `copyq` for clipboard operations
+- Commands: `copyq copy -` (write from stdin), `copyq clipboard` (read to stdout)
+- Installed via ~/linux-utils/install.sh on both platforms
+
+**File Opener:**
+- macOS: `open` (built-in command)
+- Linux: `xdg-open` (via alias)
+
+**Admin User:**
+- macOS: `/Users/admin`
+- Linux: `/root`
+
+**AsyncAPI Autocomplete:**
+- macOS: `$HOME/Library/Caches/@asyncapi/cli/autocomplete/zsh_setup`
+- Linux: `$HOME/.cache/@asyncapi/cli/autocomplete/zsh_setup`
+
+### Installation
+
+Installation scripts detect OS automatically:
+```bash
+./init.sh    # Installs oh-my-zsh (auto-detects OS)
+./init2.sh   # Sets zsh as default shell
+./init3.sh   # Installs themes, plugins (auto-detects OS)
+```
 
 ### Aider Configuration
 
