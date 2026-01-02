@@ -115,7 +115,7 @@ OS_TYPE=$(detect_os)
 **Clipboard:**
 - Both platforms use `copyq` for clipboard operations
 - Commands: `copyq copy -` (write from stdin), `copyq clipboard` (read to stdout)
-- Installed via ~/linux-utils/install.sh on both platforms
+- Installed via ~/unix-utils/install.sh on both platforms
 
 **File Opener:**
 - macOS: `open` (built-in command)
