@@ -44,11 +44,5 @@ function aicmd() {
 
   printf '%s\n%s\n' "$cmd" "$info"
 
-  if command -v pbcopy >/dev/null 2>&1; then
-    printf '%s' "$cmd" | pbcopy
-  elif command -v wl-copy >/dev/null 2>&1; then
-    printf '%s' "$cmd" | wl-copy
-  elif command -v xclip >/dev/null 2>&1; then
-    printf '%s' "$cmd" | xclip -selection clipboard
-  fi
+  printf '%s' "$cmd" | copyq copy -
 }
