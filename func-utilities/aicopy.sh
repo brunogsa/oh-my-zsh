@@ -72,20 +72,9 @@ function aicopy() {
     return 1
   fi
 
-  # Copy to clipboard (macOS, Wayland, X11, or copyq)
-  local rc=0 copied_with=""
-  if command -v pbcopy >/dev/null 2>&1; then
-    pbcopy < "$tmpfile"; rc=$?; copied_with="pbcopy"
-  elif command -v wl-copy >/dev/null 2>&1; then
-    wl-copy < "$tmpfile"; rc=$?; copied_with="wl-copy"
-  elif command -v xclip >/dev/null 2>&1; then
-    xclip -selection clipboard < "$tmpfile"; rc=$?; copied_with="xclip"
-  elif command -v copyq >/dev/null 2>&1; then
-    copyq copy < "$tmpfile"; rc=$?; copied_with="copyq"
-  else
-    echo "Error: No clipboard command found (pbcopy, wl-copy, xclip, copyq)" >&2
-    return 1
-  fi
+  # Copy to clipboard using copyq
+  local rc=0 copied_with="copyq"
+  copyq copy < "$tmpfile"; rc=$?
   if (( rc != 0 )); then
     echo "Error: clipboard command failed (exit $rc)." >&2
     return $rc
@@ -96,20 +85,9 @@ function aicopy() {
   local expected_bytes
   expected_bytes=$(wc -c < "$tmpfile" | tr -d ' ')
 
-  # Bytes actually in the clipboard (pick an available paste tool)
+  # Bytes actually in the clipboard
   local pasted_bytes=""
-  if command -v pbpaste >/dev/null 2>&1; then
-    pasted_bytes=$(pbpaste | wc -c | tr -d ' ')
-  elif command -v wl-paste >/dev/null 2>&1; then
-    pasted_bytes=$(wl-paste | wc -c | tr -d ' ')
-  elif command -v xclip >/dev/null 2>&1; then
-    pasted_bytes=$(xclip -selection clipboard -o 2>/dev/null | wc -c | tr -d ' ')
-  elif command -v copyq >/dev/null 2>&1; then
-    pasted_bytes=$(copyq read 2>/dev/null | wc -c | tr -d ' ')
-  else
-    echo "Warning: could not verify clipboard contents (no paste tool found)." >&2
-    pasted_bytes=""
-  fi
+  pasted_bytes=$(copyq clipboard 2>/dev/null | wc -c | tr -d ' ')
 
   if [[ -n "$pasted_bytes" ]] && (( pasted_bytes < expected_bytes )); then
     echo "Error: clipboard appears truncated (${pasted_bytes} of ${expected_bytes} bytes)." >&2
