@@ -39,8 +39,6 @@ PUNCTUAL_SHOW_GIT="true";
 # sensitive completion must be off. _ and - will be interchangeable.
 HYPHEN_INSENSITIVE="true"
 
-DISABLE_AUTO_TITLE="true"
-
 # Uncomment the following line to disable bi-weekly auto-update checks.
 # DISABLE_AUTO_UPDATE="true"
 
@@ -51,7 +49,7 @@ DISABLE_AUTO_TITLE="true"
 # DISABLE_LS_COLORS="true"
 
 # Uncomment the following line to disable auto-setting terminal title.
-# DISABLE_AUTO_TITLE="true"
+DISABLE_AUTO_TITLE="true"
 
 # Uncomment the following line to enable command auto-correction.
 # ENABLE_CORRECTION="true"
@@ -82,6 +80,14 @@ source $ZSH/oh-my-zsh.sh
 
 # User configuration
 
+# Auto-source all utility functions from func-utilities directory
+if [ -d "$HOME/oh-my-zsh/func-utilities" ]; then
+  for utility_file in "$HOME/oh-my-zsh/func-utilities"/*.sh; do
+    [ -f "$utility_file" ] && source "$utility_file"
+  done
+  unset utility_file
+fi
+
 # export MANPATH="/usr/local/man:$MANPATH"
 
 # You may need to manually set your language environment
@@ -100,27 +106,6 @@ export LANG=en_US.UTF-8
 # ssh
 # export SSH_KEY_PATH="~/.ssh/rsa_id"
 
-function meldSorted () {
-  fileA=$1
-  fileB=$2
-
-  sortedFileA=/tmp/sorted-$(basename $fileA)
-  sortedFileB=/tmp/sorted-$(basename $fileB)
-
-  sort $fileA > $sortedFileA
-  sort $fileB > $sortedFileB
-
-  meld $sortedFileA $sortedFileB
-}
-
-function compileMermaid () {
-  mermaidFile=$1
-  fileName=$(echo "$mermaidFile" | cut -d '.' -f 1)
-
-  mmdc -i $mermaidFile -o ${fileName}.png --scale 4
-  convert -trim $fileName.png $fileName.png
-}
-
 # Set personal aliases, overriding those provided by oh-my-zsh libs,
 # plugins, and themes. Aliases can be placed here, though oh-my-zsh
 # users are encouraged to define aliases within the ZSH_CUSTOM folder.
@@ -128,14 +113,55 @@ function compileMermaid () {
 alias curl='curl --noproxy "*"'
 alias sudo='sudo '
 alias vim=nvim
-alias cd-gitroot='cd `git rev-parse --show-toplevel`'
-alias open='xdg-open'
-alias rg="rg --hidden --follow -g '!*.git*'"
 
-export FZF_CTRL_T_COMMAND='rg --files `git rev-parse --show-toplevel | xargs realpath --relative-to="${PWD}"`'
+# Useful when using aider:
+# brew upgrade aider
+# --copy-paste: for working wih chatgpt web UI, when throttling begins
+# claude-sonnet-4-20250514
+# claude-3-7-sonnet-20250219
+# gpt-4.1-2025-04-14
+# gpt-4.1-mini-2025-04-14
+# gpt-4.1-nano-2025-04-14
+# o3-2025-04-16
+# o4-mini-2025-04-16
+alias aid='aider --add-gitignore-files --no-auto-commits --no-dirty-commits --no-attribute-author --no-attribute-committer --no-attribute-commit-message-author --no-attribute-commit-message-committer --no-attribute-co-authored-by --stream --subtree-only --map-tokens 4096 --map-multiplier-no-files 2 --map-refresh auto --editor nvim --pretty --code-theme monokai --edit-format diff --editor-edit-format diff --read ~/.claude/CLAUDE.md --max-chat-history-tokens 0 --skip-sanity-check-repo --watch-files --cache-prompts --cache-keepalive-pings 3 --no-auto-accept-architect --alias 41:gpt-4.1 --alias 41m:gpt-4.1-mini --alias 41n:gpt-4.1-nano --alias o4m:o4-mini-2025-04-16 --model 41m --editor-model 41m --weak-model 41n --no-verify-ssl'
+alias aidc='aid --restore-chat-history'
+
+alias cdgitroot='cd `git rev-parse --show-toplevel`'
+alias rg="rg --hidden --follow -g '!html/*' -g '!.git/*' -g '!node_modules/*' -g '!vendor/*' -g '!dist/*' -g '!build/*' -g '!.next/*' -g '!out/*' -g '!coverage/*' -g '!.cache/*'"
+alias tree="tree -C -I 'html' -I '.git' -I 'node_modules' -I 'vendor' -I 'dist' -I 'build' -I '.next' -I 'out' -I 'coverage' -I '.cache'"
+alias cdhome="cd ~"
+alias claude="unset ANTHROPIC_API_KEY && ANTHROPIC_API_KEY="" claude"
+
+# Check if copyq exists in PATH
+if ! which copyq &>/dev/null; then
+  alias copyq="/Applications/CopyQ.app/Contents/MacOS/CopyQ"
+fi
+
+export FZF_CTRL_T_COMMAND="if git_root=\$(git rev-parse --show-toplevel 2>/dev/null); then rg --files \"\$git_root\" | node -e 'const { relative, resolve } = require(\"path\"); const cwd = process.cwd(); require(\"readline\").createInterface({ input: process.stdin }).on(\"line\", l => console.log(relative(cwd, resolve(l))))'; else rg --files | sed 's|^\\./||'; fi"
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 export PATH="$HOME/.local/bin:$PATH"
 
 # Deno
 export DENO_INSTALL="$HOME/.deno"
 export PATH="$DENO_INSTALL/bin:$PATH"
+
+export AWS_CLI_FILE_ENCODING=UTF-8
+export AWS_PAGER=""
+
+# Add node global binaries to PATH
+export PATH="$PATH:/usr/local/bin"
+
+# Add RVM to PATH for scripting. Make sure this is the last PATH variable change.
+export PATH="$PATH:$HOME/.rvm/bin"
+
+export AIDER_EDITOR=nvim
+export EDITOR=nvim
+export VISUAL=nvim
+
+source ~/.temporary-global-envs.sh
+source ~/.secrets.sh
+
+# AsyncAPI CLI Autocomplete
+
+ASYNCAPI_AC_ZSH_SETUP_PATH=/Users/brunoagostini/Library/Caches/@asyncapi/cli/autocomplete/zsh_setup && test -f $ASYNCAPI_AC_ZSH_SETUP_PATH && source $ASYNCAPI_AC_ZSH_SETUP_PATH; # asyncapi autocomplete setup
