@@ -1,14 +1,35 @@
 #!/bin/bash
 set -e
 
-# Dependency on mac
-brew install coreutils
+# Source OS detection
+source ~/oh-my-zsh/func-utilities/detect-os.sh
+OS_TYPE=$(detect_os)
 
+# OS-specific dependencies
+if [[ "$OS_TYPE" == "macos" ]]; then
+  brew install coreutils
+fi
+
+if [[ "$OS_TYPE" == "linux" ]]; then
+  sudo apt-get install silversearcher-ag -y
+fi
+
+# Set admin user home based on OS
+if [[ "$OS_TYPE" == "macos" ]]; then
+  ADMIN_HOME="/Users/admin"
+fi
+
+if [[ "$OS_TYPE" == "linux" ]]; then
+  ADMIN_HOME="/root"
+fi
+
+# Link user configs
 ln -sf ~/oh-my-zsh/.zshrc ~/.zshrc
-sudo mkdir -p ~/.oh-my-zsh /Users/admin
-sudo mkdir -p /Users/admin
-sudo ln -sf ~/.oh-my-zsh /Users/admin/.oh-my-zsh
-sudo ln -sf ~/oh-my-zsh/.zshrc /Users/admin/.zshrc
+
+# Create and link admin/root configs
+sudo mkdir -p ~/.oh-my-zsh "$ADMIN_HOME"
+sudo ln -sf ~/.oh-my-zsh "$ADMIN_HOME/.oh-my-zsh"
+sudo ln -sf ~/oh-my-zsh/.zshrc "$ADMIN_HOME/.zshrc"
 
 touch ~/.secrets.sh
 touch ~/.temporary-global-envs.sh
