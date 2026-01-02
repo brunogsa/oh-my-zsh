@@ -23,6 +23,9 @@
 # Path to your oh-my-zsh installation.
 export ZSH="$HOME/.oh-my-zsh"
 
+# Detect operating system (sourced early for use throughout config)
+OS_TYPE=$(detect_os)
+
 # Set name of the theme to load. Optionally, if you set this to "random"
 # it'll load a random theme each time that oh-my-zsh is loaded.
 # See https://github.com/robbyrussell/oh-my-zsh/wiki/Themes
@@ -114,6 +117,11 @@ alias curl='curl --noproxy "*"'
 alias sudo='sudo '
 alias vim=nvim
 
+# Linux: xdg-open for opening files
+if [[ "$OS_TYPE" == "linux" ]]; then
+  alias open='xdg-open'
+fi
+
 # Useful when using aider:
 # brew upgrade aider
 # --copy-paste: for working wih chatgpt web UI, when throttling begins
@@ -133,9 +141,11 @@ alias tree="tree -C -I 'html' -I '.git' -I 'node_modules' -I 'vendor' -I 'dist' 
 alias cdhome="cd ~"
 alias claude="unset ANTHROPIC_API_KEY && ANTHROPIC_API_KEY="" claude"
 
-# Check if copyq exists in PATH
-if ! which copyq &>/dev/null; then
-  alias copyq="/Applications/CopyQ.app/Contents/MacOS/CopyQ"
+# macOS: Check if copyq exists in PATH, alias to app bundle if not
+if [[ "$OS_TYPE" == "macos" ]]; then
+  if ! which copyq &>/dev/null; then
+    alias copyq="/Applications/CopyQ.app/Contents/MacOS/CopyQ"
+  fi
 fi
 
 export FZF_CTRL_T_COMMAND="if git_root=\$(git rev-parse --show-toplevel 2>/dev/null); then rg --files \"\$git_root\" | node -e 'const { relative, resolve } = require(\"path\"); const cwd = process.cwd(); require(\"readline\").createInterface({ input: process.stdin }).on(\"line\", l => console.log(relative(cwd, resolve(l))))'; else rg --files | sed 's|^\\./||'; fi"
@@ -159,9 +169,25 @@ export AIDER_EDITOR=nvim
 export EDITOR=nvim
 export VISUAL=nvim
 
-source ~/.temporary-global-envs.sh
-source ~/.secrets.sh
+if [[ ! -f "$HOME/.temporary-global-envs.sh" ]]; then
+  touch "$HOME/.temporary-global-envs.sh"
+fi
+source "$HOME/.temporary-global-envs.sh"
+
+if [[ ! -f "$HOME/.secrets.sh" ]]; then
+  touch "$HOME/.secrets.sh"
+fi
+source "$HOME/.secrets.sh"
 
 # AsyncAPI CLI Autocomplete
+if [[ "$OS_TYPE" == "macos" ]]; then
+  ASYNCAPI_AC_ZSH_SETUP_PATH="$HOME/Library/Caches/@asyncapi/cli/autocomplete/zsh_setup"
+fi
 
-ASYNCAPI_AC_ZSH_SETUP_PATH=/Users/brunoagostini/Library/Caches/@asyncapi/cli/autocomplete/zsh_setup && test -f $ASYNCAPI_AC_ZSH_SETUP_PATH && source $ASYNCAPI_AC_ZSH_SETUP_PATH; # asyncapi autocomplete setup
+if [[ "$OS_TYPE" == "linux" ]]; then
+  ASYNCAPI_AC_ZSH_SETUP_PATH="$HOME/.cache/@asyncapi/cli/autocomplete/zsh_setup"
+fi
+
+if [[ -f "$ASYNCAPI_AC_ZSH_SETUP_PATH" ]]; then
+  source "$ASYNCAPI_AC_ZSH_SETUP_PATH"
+fi
