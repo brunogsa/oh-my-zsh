@@ -41,6 +41,6 @@ function aiyank() {
 
   local result="${rel_paths[*]}"
   echo "$result"
-  printf "%s" "$result" | pbcopy
+  printf "%s" "$result" | copyq copy -
   echo "Copied to clipboard."
 }
