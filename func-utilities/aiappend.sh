@@ -20,19 +20,7 @@ function aiappend() {
 
   # Internal function to get clipboard content
   function _get_clipboard() {
-    if command -v pbpaste &> /dev/null; then
-      # macOS
-      pbpaste
-    elif command -v wl-paste &> /dev/null; then
-      # Wayland
-      wl-paste
-    elif command -v xclip &> /dev/null; then
-      # X11
-      xclip -selection clipboard -o
-    else
-      echo "Error: No clipboard command found (pbpaste, wl-paste, or xclip)" >&2
-      return 1
-    fi
+    copyq clipboard
   }
 
   # Internal function to handle clipboard content
