@@ -44,5 +44,5 @@ function aicmd() {
 
   printf '%s\n%s\n' "$cmd" "$info"
 
-  printf '%s' "$cmd" | copyq copy -
+  printf '%s' "$cmd" | copy
 }

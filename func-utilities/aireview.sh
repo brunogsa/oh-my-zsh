@@ -350,7 +350,7 @@ function aireview() {
       xclip -selection clipboard < "$file" || return $?
       COPIED_WITH="xclip"; return 0
     elif command -v copyq >/dev/null 2>&1; then
-      copyq copy < "$file" || return $?
+      cat "$file" | copy || return $?
       COPIED_WITH="copyq"; return 0
     else
       echo "Error: No clipboard tool found (pbcopy, wl-copy, xclip, copyq)." >&2

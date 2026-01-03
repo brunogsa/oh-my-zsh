@@ -74,7 +74,7 @@ function aicopy() {
 
   # Copy to clipboard using copyq
   local rc=0 copied_with="copyq"
-  copyq copy < "$tmpfile"; rc=$?
+  cat "$tmpfile" | copy; rc=$?
   if (( rc != 0 )); then
     echo "Error: clipboard command failed (exit $rc)." >&2
     return $rc
