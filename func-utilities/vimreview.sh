@@ -19,21 +19,24 @@ vimreview() {
   fi
 
   if [ ! -t 0 ]; then
-    local tmpfile="/tmp/vimreview-$(date +%s)-$$.diff"
+    local tmpfile
+    tmpfile="/tmp/vimreview-$(date +%s)-$$.diff"
     cat > "$tmpfile"
     nvim -c "tabnew $tmpfile" -c "set filetype=diff"
     return
   fi
 
-  local dummy_file
-  dummy_file=$(git ls-files | head -n 1)
-  if [[ -z "$dummy_file" ]]; then
+  local recent_file
+  recent_file=$(git diff --name-only HEAD 2>/dev/null | xargs ls -t 2>/dev/null | head -n 1)
+  recent_file="${recent_file:-$(git ls-files --modified | xargs ls -t 2>/dev/null | head -n 1)}"
+  recent_file="${recent_file:-$(git ls-files | head -n 1)}"
+  if [[ -z "$recent_file" ]]; then
     echo "Error: No tracked files found." >&2
     return 1
   fi
 
   local cmd="DiffviewOpen"
-  [[ $# -eq 0 ]] && cmd+=" $1"
+  [[ $# -gt 0 ]] && cmd+=" $1"
 
-  nvim "$dummy_file" -c "$cmd"
+  nvim "$recent_file" -c "$cmd"
 }
