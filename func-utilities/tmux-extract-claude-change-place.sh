@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Copies an nvim command pointing to the last Claude Code edit from the current tmux pane
-# Usage: Press tmux prefix + g while the Claude pane is focused
+# Extracts the last Claude Code edit target and builds an nvim command
+# Usage: Press tmux prefix + g (copy) or G (open in new window)
 
 source ~/oh-my-zsh/func-utilities/copy.sh
 
-tmux-extract-claude-change-place() {
+_build-claude-edit-nvim-cmd() {
   local pane_content
   pane_content=$(tmux capture-pane -p -S -100)
 
@@ -26,7 +26,18 @@ tmux-extract-claude-change-place() {
   line=$(echo "$pane_content" | tail -n +"$last_edit_line_num" | grep -oE '^\s+[0-9]+ \+' | head -1 | grep -oE '[0-9]+')
   line="${line:-1}"
 
-  local cmd="nvim +${line} ${file}"
+  echo "nvim +${line} ${file}"
+}
+
+tmux-extract-claude-change-place() {
+  local cmd
+  cmd=$(_build-claude-edit-nvim-cmd) || return 1
   echo -n "$cmd" | copy
   tmux display-message "Copied: ${cmd}"
+}
+
+tmux-open-claude-edit-in-new-window() {
+  local cmd
+  cmd=$(_build-claude-edit-nvim-cmd) || return 1
+  tmux new-window "$cmd"
 }
