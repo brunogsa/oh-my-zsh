@@ -39,5 +39,7 @@ tmux-extract-claude-change-place() {
 tmux-open-claude-edit-in-new-window() {
   local cmd
   cmd=$(_build-claude-edit-nvim-cmd) || return 1
-  tmux new-window "$cmd"
+  local pane_path
+  pane_path=$(tmux display-message -p '#{pane_current_path}')
+  tmux new-window -c "$pane_path" "$cmd"
 }
