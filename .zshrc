@@ -134,7 +134,7 @@ fi
 # o3-2025-04-16
 # o4-mini-2025-04-16
 alias aid='aider --add-gitignore-files --no-auto-commits --no-dirty-commits --no-attribute-author --no-attribute-committer --no-attribute-commit-message-author --no-attribute-commit-message-committer --no-attribute-co-authored-by --stream --subtree-only --map-tokens 4096 --map-multiplier-no-files 2 --map-refresh auto --editor nvim --pretty --code-theme monokai --edit-format diff --editor-edit-format diff --read ~/.claude/CLAUDE.md --max-chat-history-tokens 0 --skip-sanity-check-repo --watch-files --cache-prompts --cache-keepalive-pings 3 --no-auto-accept-architect --alias 41:gpt-4.1 --alias 41m:gpt-4.1-mini --alias 41n:gpt-4.1-nano --alias o4m:o4-mini-2025-04-16 --model 41m --editor-model 41m --weak-model 41n --no-verify-ssl'
-alias aidc='aid --restore-chat-history'
+export AIDER_EDITOR=nvim
 
 alias cdgitroot='cd `git rev-parse --show-toplevel`'
 alias rg="rg --hidden --follow -g '!html/*' -g '!.git/*' -g '!node_modules/*' -g '!vendor/*' -g '!dist/*' -g '!build/*' -g '!.next/*' -g '!out/*' -g '!coverage/*' -g '!.cache/*'"
@@ -157,17 +157,18 @@ export PATH="$HOME/.local/bin:$PATH"
 export DENO_INSTALL="$HOME/.deno"
 export PATH="$DENO_INSTALL/bin:$PATH"
 
+# AWS
 export AWS_CLI_FILE_ENCODING=UTF-8
 export AWS_PAGER=""
 
 # Add node global binaries to PATH
-export PATH="$PATH:/usr/local/bin"
+# Prioritize n-managed Node over Homebrew
+export PATH="/usr/local/bin:$PATH"
 
 # Add RVM to PATH for scripting. Make sure this is the last PATH variable change.
 export PATH="$PATH:$HOME/.rvm/bin"
 export PATH="$(npm config get prefix)/bin:$PATH" # Add global npm packages to path
 
-export AIDER_EDITOR=nvim
 export EDITOR=nvim
 export VISUAL=nvim
 
@@ -193,3 +194,5 @@ fi
 if [[ -f "$ASYNCAPI_AC_ZSH_SETUP_PATH" ]]; then
   source "$ASYNCAPI_AC_ZSH_SETUP_PATH"
 fi
+
+ASYNCAPI_AC_ZSH_SETUP_PATH=/Users/brunoagostini/Library/Caches/@asyncapi/cli/autocomplete/zsh_setup && test -f $ASYNCAPI_AC_ZSH_SETUP_PATH && source $ASYNCAPI_AC_ZSH_SETUP_PATH; # asyncapi autocomplete setup
