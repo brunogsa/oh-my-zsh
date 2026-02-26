@@ -213,7 +213,7 @@ function aws-get-integrator-logs() {
   script_dir="$(cd "$(dirname "$0")" 2>/dev/null && pwd)"
   # Fallback: $0 may not resolve correctly when sourced
   if [[ ! -f "$script_dir/jsonl-merge-and-sort-by-field.js" ]]; then
-    script_dir="$HOME/oh-my-zsh/func-utilities"
+    script_dir="$HOME/oh-my-zsh/commands"
   fi
 
   local merged_output

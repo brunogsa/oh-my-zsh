@@ -2,7 +2,7 @@
 # Extracts the last Claude Code edit target and builds an nvim command
 # Usage: Press tmux prefix + g (copy) or G (open in new window)
 
-source ~/oh-my-zsh/func-utilities/copy.sh
+source ~/oh-my-zsh/commands/copy.sh
 
 tmux-extract-claude-change-place() {
   local with_line=false

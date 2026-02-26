@@ -2,7 +2,7 @@
 set -e
 
 # Source OS detection
-source ~/oh-my-zsh/func-utilities/detect-os.sh
+source ~/oh-my-zsh/lib/detect-os.sh
 
 OS=$(detect_os)
 echo "Detected OS: $OS"

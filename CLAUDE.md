@@ -102,7 +102,7 @@ The `detect-os.sh` utility automatically detects the operating system:
 
 Usage:
 ```bash
-source ~/oh-my-zsh/func-utilities/detect-os.sh
+source ~/oh-my-zsh/lib/detect-os.sh
 OS_TYPE=$(detect_os)
 ```
 

@@ -2,7 +2,7 @@
 set -e
 
 # Source OS detection
-source ~/oh-my-zsh/func-utilities/detect-os.sh
+source ~/oh-my-zsh/lib/detect-os.sh
 OS_TYPE=$(detect_os)
 
 # OS-specific dependencies

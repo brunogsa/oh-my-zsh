@@ -24,7 +24,7 @@
 export ZSH="$HOME/.oh-my-zsh"
 
 # Detect operating system (sourced early for use throughout config)
-source "$HOME/oh-my-zsh/func-utilities/detect-os.sh"
+source "$HOME/oh-my-zsh/lib/detect-os.sh"
 OS_TYPE=$(detect_os)
 
 # Set name of the theme to load. Optionally, if you set this to "random"
@@ -84,9 +84,9 @@ source $ZSH/oh-my-zsh.sh
 
 # User configuration
 
-# Auto-source all utility functions from func-utilities directory
-if [ -d "$HOME/oh-my-zsh/func-utilities" ]; then
-  for utility_file in "$HOME/oh-my-zsh/func-utilities"/*.sh; do
+# Auto-source all commands from commands directory
+if [ -d "$HOME/oh-my-zsh/commands" ]; then
+  for utility_file in "$HOME/oh-my-zsh/commands"/*.sh; do
     [ -f "$utility_file" ] && source "$utility_file"
   done
   unset utility_file
@@ -149,8 +149,20 @@ if [[ "$OS_TYPE" == "macos" ]]; then
   fi
 fi
 
-export FZF_CTRL_T_COMMAND="if git_root=\$(git rev-parse --show-toplevel 2>/dev/null); then rg --files \"\$git_root\" | node -e 'const { relative, resolve } = require(\"path\"); const cwd = process.cwd(); require(\"readline\").createInterface({ input: process.stdin }).on(\"line\", l => console.log(relative(cwd, resolve(l))))'; else rg --files | sed 's|^\\./||'; fi"
+export FZF_CTRL_T_COMMAND="source ~/oh-my-zsh/lib/list-project-paths.sh && list_project_paths"
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+
+# Override fzf Ctrl+T widget to pre-fill query with partial word at cursor
+fzf-file-widget() {
+  local prefix="${LBUFFER##*[[:space:]]}"
+  LBUFFER="${LBUFFER%$prefix}"
+  local selected=$(__fzf_select --query="$prefix")
+  LBUFFER="${LBUFFER}${selected}"
+  local ret=$?
+  zle reset-prompt
+  return $ret
+}
+zle -N fzf-file-widget
 export PATH="$HOME/.local/bin:$PATH"
 
 # Deno
