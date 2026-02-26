@@ -140,7 +140,7 @@ alias cdgitroot='cd `git rev-parse --show-toplevel`'
 alias rg="rg --hidden --follow -g '!html/*' -g '!.git/*' -g '!node_modules/*' -g '!vendor/*' -g '!dist/*' -g '!build/*' -g '!.next/*' -g '!out/*' -g '!coverage/*' -g '!.cache/*'"
 alias tree="tree -C -I 'html' -I '.git' -I 'node_modules' -I 'vendor' -I 'dist' -I 'build' -I '.next' -I 'out' -I 'coverage' -I '.cache'"
 alias cdhome="cd ~"
-alias claude="unset ANTHROPIC_API_KEY && ANTHROPIC_API_KEY='' && CLAUDE_CODE_DISABLE_BACKGROUND_TASKS=1 claude --allow-dangerously-skip-permissions"
+alias claude="unset ANTHROPIC_API_KEY && ANTHROPIC_API_KEY='' && CLAUDE_CODE_DISABLE_BACKGROUND_TASKS=1 claude --allow-dangerously-skip-permissions --verbose"
 
 # macOS: Check if copyq exists in PATH, alias to app bundle if not
 if [[ "$OS_TYPE" == "macos" ]]; then
