@@ -4,7 +4,10 @@
 
 source ~/oh-my-zsh/func-utilities/copy.sh
 
-_build-claude-edit-nvim-cmd() {
+tmux-extract-claude-change-place() {
+  local with_line=false
+  [[ "$1" == "--with-line" ]] && with_line=true
+
   local pane_content
   pane_content=$(tmux capture-pane -p -S -100)
 
@@ -21,25 +24,17 @@ _build-claude-edit-nvim-cmd() {
   local file
   file=$(echo "$pane_content" | sed -n "${last_edit_line_num}p" | grep -oE '(Update|Edit)\([^)]+\)' | sed 's/.*(\(.*\))/\1/')
 
-  # Extract first + line number from the diff block after the edit header
-  local line
-  line=$(echo "$pane_content" | tail -n +"$last_edit_line_num" | grep -oE '^\s+[0-9]+ \+' | head -1 | grep -oE '[0-9]+')
-  line="${line:-1}"
+  local result
+  if $with_line; then
+    # Extract first + line number from the diff block after the edit header
+    local line
+    line=$(echo "$pane_content" | tail -n +"$last_edit_line_num" | grep -oE '^\s+[0-9]+ \+' | head -1 | grep -oE '[0-9]+')
+    line="${line:-1}"
+    result="nvim +${line} ${file}"
+  else
+    result="$file"
+  fi
 
-  echo "nvim +${line} ${file}"
-}
-
-tmux-extract-claude-change-place() {
-  local cmd
-  cmd=$(_build-claude-edit-nvim-cmd) || return 1
-  echo -n "$cmd" | copy
-  tmux display-message "Copied: ${cmd}"
-}
-
-tmux-open-claude-edit-in-new-window() {
-  local cmd
-  cmd=$(_build-claude-edit-nvim-cmd) || return 1
-  local pane_path
-  pane_path=$(tmux display-message -p '#{pane_current_path}')
-  tmux new-window -c "$pane_path" "$cmd"
+  echo -n "$result" | copy
+  tmux display-message "Copied: ${result}"
 }
