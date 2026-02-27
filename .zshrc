@@ -27,6 +27,12 @@ export ZSH="$HOME/.oh-my-zsh"
 source "$HOME/oh-my-zsh/lib/detect-os.sh"
 OS_TYPE=$(detect_os)
 
+# Auto-launch tmux in Ghostty — exec replaces the shell process so no
+# extra zsh hangs around after tmux exits.
+if [[ "$TERM_PROGRAM" == "ghostty" && -z "$TMUX" ]]; then
+  exec tmux new-session -A -s main
+fi
+
 # Set name of the theme to load. Optionally, if you set this to "random"
 # it'll load a random theme each time that oh-my-zsh is loaded.
 # See https://github.com/robbyrussell/oh-my-zsh/wiki/Themes
