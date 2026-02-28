@@ -148,6 +148,11 @@ alias tree="tree -C -I 'html' -I '.git' -I 'node_modules' -I 'vendor' -I 'dist' 
 alias cdhome="cd ~"
 alias claude="unset ANTHROPIC_API_KEY && ANTHROPIC_API_KEY='' && claude --allow-dangerously-skip-permissions --verbose"
 
+# macOS: Add Ghostty CLI to PATH
+if [[ "$OS_TYPE" == "macos" && -d "/Applications/Ghostty.app/Contents/MacOS" ]]; then
+  export PATH="/Applications/Ghostty.app/Contents/MacOS:$PATH"
+fi
+
 # macOS: Check if copyq exists in PATH, alias to app bundle if not
 if [[ "$OS_TYPE" == "macos" ]]; then
   if ! which copyq &>/dev/null; then
