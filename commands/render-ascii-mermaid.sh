@@ -10,9 +10,11 @@
 #   echo 'flowchart LR; A-->B-->C' | render-ascii-mermaid     # from stdin
 #   echo 'sequenceDiagram; Alice->>Bob: Hello!' | render-ascii-mermaid
 
+_RENDER_ASCII_MERMAID_SRC="${BASH_SOURCE[0]:-$0}"
+
 function render-ascii-mermaid () {
   if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
-    sed -n '2,11p' "${BASH_SOURCE[0]}" | sed 's/^# \?//'
+    sed -n '2,11p' "$_RENDER_ASCII_MERMAID_SRC" | sed 's/^# \?//'
     return 0
   fi
 
