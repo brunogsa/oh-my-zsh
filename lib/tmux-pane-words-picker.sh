@@ -11,6 +11,12 @@
 #       run-shell -b "~/oh-my-zsh/lib/tmux-pane-words-picker.sh --send"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# tmux's display-popup runs commands using the server's PATH, not an interactive
+# shell's. The oh-my-zsh fzf plugin only adds its bin/ to PATH in .zshrc, so fzf
+# is invisible to tmux-spawned processes.
+export PATH="$HOME/.oh-my-zsh/custom/plugins/fzf/bin:$PATH"
+
 RESULT_FILE="/tmp/tmux-pane-words-result"
 CONTEXT_FILE="/tmp/tmux-picker-context"
 PANE_FILE="/tmp/tmux-cursor-pane"
