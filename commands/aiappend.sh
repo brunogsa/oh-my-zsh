@@ -3,7 +3,7 @@
 function aiappend() {
   # Internal function to display help
   function _show_help() {
-    echo "aiappend - Append useful context to the global Aider context file"
+    echo "aiappend - Append useful context to the global context file"
     echo
     echo "Usage:"
     echo "  aiappend [options]"
@@ -64,8 +64,8 @@ function aiappend() {
     echo "Appended command '$last_cmd' and its output to $context_file"
   }
 
-  # Default location for the global Aider context file
-  local CONTEXT_FILE="${HOME}/.claude/CLAUDE.md"
+  # Default location for the global context file
+  local CONTEXT_FILE="${HOME}/.ai-context"
 
   # Create context file if it doesn't exist
   if [[ ! -f "$CONTEXT_FILE" ]]; then

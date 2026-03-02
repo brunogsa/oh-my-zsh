@@ -23,8 +23,8 @@ The `.zshrc` file contains numerous utility functions organized by purpose:
 1. **Document Processing**: `compile-mermaid`, `compile-gantt-mermaid`, `gen-schema-from-json`
 2. **File Comparison**: `diff-sorted-txt`, `diff-sorted-jsons`
 3. **Code Utilities**: `search-replace-vim`, `node-debug-reminder`
-4. **AI Integration**: `ai-request`, `ai-changelog`, `aigitcommit`, `aicmd`, `aiyank`, `aicopy`, `aiappend`, `aireview`
-5. **Git/Review Tools**: `vimreview`, `aireview`
+4. **AI Integration**: `ai-request`, `ai-changelog`, `aigitcommit`, `aicmd`, `aiyank`, `aicopy`, `aiappend`
+5. **Git/Review Tools**: `vimreview`
 6. **AWS Integration**: `aws-get-cloudwatch-logs`
 
 ### AI Function Architecture
@@ -33,24 +33,6 @@ The AI functions follow a consistent pattern:
 - Use OpenAI API (gpt-4o, o4-mini) as primary provider
 - Fallback to Anthropic Claude (claude-3-7-sonnet-latest) when OpenAI quota is exceeded
 - API keys stored in environment variables: `$OPENAI_API_KEY`, `$ANTHROPIC_API_KEY`
-
-### Code Review Workflow (`aireview`)
-
-The `aireview` function is complex and performs:
-1. Creates a temporary clone of the repo via SSH
-2. Resolves git refs (supports branches, tags, origin/ prefixes)
-3. Generates repo map using Aider (mandatory)
-4. Collects changed files between merge-base and target ref
-5. Excludes lockfiles from full content dumps
-6. Extracts CODE and REVIEW sections from `~/.claude/CLAUDE.md` for review guidelines
-7. Produces a comprehensive markdown bundle with:
-   - Repository structure (via Aider's repo map)
-   - Full content of modified files with line numbers
-   - Git diff (excluding lockfiles)
-   - Git context (log, diff --stat, show)
-   - Code conventions and review instructions from CLAUDE.md
-8. Copies bundle to clipboard with truncation verification
-9. Estimates token count for LLM context
 
 ## Development Commands
 
@@ -83,7 +65,6 @@ Required external tools:
 - `rg` (ripgrep - configured with custom exclusions)
 - `fzf` (fuzzy finder)
 - `jq` (JSON processor)
-- `aider` (AI code assistant - required for `aireview`)
 - `git` with SSH access configured
 - `meld` (diff viewer)
 - `mmdc` (Mermaid CLI)
@@ -137,18 +118,6 @@ Installation scripts detect OS automatically:
 ./init2.sh   # Sets zsh as default shell
 ./init3.sh   # Installs themes, plugins (auto-detects OS)
 ```
-
-### Aider Configuration
-
-The `aid` alias configures Aider with specific settings:
-- Uses gpt-4.1 models (41, 41m, 41n aliases)
-- Reads from `~/.claude/CLAUDE.md` for conventions
-- Subtree-only mode with 4096 token map
-- Diff-based editing format
-- No auto-commits, no attribution
-- Editor: nvim with monokai theme
-- Cache prompts with keepalive pings
-- Skip SSL verification
 
 ## Code Conventions
 
@@ -230,16 +199,13 @@ Key aliases to be aware of:
 - `vim` → `nvim`
 - `rg` → includes common exclusions (node_modules, .git, dist, build, etc.)
 - `tree` → excludes same directories as rg
-- `aid` → full aider configuration with gpt-4.1 models
-- `aidc` → aider with chat history restoration
-
 ## Environment Variables
 
 Required for AI functions:
 - `OPENAI_API_KEY` - OpenAI API authentication
 - `ANTHROPIC_API_KEY` - Anthropic Claude API authentication
 - `AWS_PROFILE` - AWS profile for CloudWatch functions
-- `EDITOR`, `VISUAL`, `AIDER_EDITOR` - all set to `nvim`
+- `EDITOR`, `VISUAL` - set to `nvim`
 
 ## Testing Utilities
 
