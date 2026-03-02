@@ -33,7 +33,7 @@ function aicmd() {
   $user_prompt"
 
   local result
-  result=$(ai-request "$oa_prompt" "gpt-4.1") || {
+  result=$(ai-request "$oa_prompt") || {
     echo "ai-request failed." >&2
     return 1
   }

@@ -19,5 +19,5 @@ function ai-changelog() {
 
   $diff"
 
-  ai-request "$prompt" "gpt-4.1"
+  ai-request "$prompt"
 }
