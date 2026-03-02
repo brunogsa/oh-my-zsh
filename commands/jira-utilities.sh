@@ -33,7 +33,7 @@
 #     transition-jira-issue          - Transition an issue to a new status
 
 # Source core library (jira-validate-env, jira-api-request, jira-check-error)
-source "${ZSH_CUSTOM:-$HOME/oh-my-zsh}/lib/jira.sh"
+source "$HOME/oh-my-zsh/lib/jira.sh"
 
 # ==============================================================================
 # QUERY

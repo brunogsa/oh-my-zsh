@@ -36,6 +36,26 @@ The AI functions follow a consistent pattern:
 
 ## Development Commands
 
+### Profiling Startup Time
+
+```bash
+./profiler.sh              # per-file startup time breakdown
+./profiler.sh --top 5      # just the 5 slowest
+./profiler.sh --raw        # raw xtrace log for manual analysis
+```
+
+Runs a full login shell with xtrace timestamps (same as tmux new pane) and aggregates wall time per source file. Use this to identify startup bottlenecks -- results match `zsh-bench` `first_prompt_lag_ms` within ~10%.
+
+### Performance Guard
+
+After any change to `.zshrc`, plugins, `commands/`, or `lib/`, run the profiler to catch regressions:
+
+```bash
+./profiler.sh
+```
+
+Baseline first_prompt is ~200ms. If the total exceeds ~300ms, investigate before committing. Common traps: sourcing slow executables instead of defining functions, subprocess calls in top-level code (`$(command)`), and eager-loading version managers.
+
 ### Testing Shell Functions
 
 Source the `.zshrc` to reload functions:

@@ -12,6 +12,16 @@ Cross-platform zsh configuration, CLI scripts, and shared shell libraries. The f
 
 The scripts install zsh, oh-my-zsh, themes (powerlevel10k), plugins (zsh-autosuggestions, zsh-syntax-highlighting), and symlink `.zshrc` to `~/.zshrc`. All steps are idempotent.
 
+## Profiling
+
+```bash
+./profiler.sh              # per-file startup time breakdown (top 25)
+./profiler.sh --top 5      # just the 5 slowest files
+./profiler.sh --raw        # raw xtrace log path for manual analysis
+```
+
+Uses xtrace timestamps on a full login shell (the same kind tmux spawns) to produce accurate wall-time-per-file numbers. Results match `zsh-bench` `first_prompt_lag_ms` within ~10%.
+
 ## What It Provides
 
 - **Shell config** (`.zshrc`) -- aliases, environment variables, prompt theme, and more

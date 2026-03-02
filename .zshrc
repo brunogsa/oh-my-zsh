@@ -27,6 +27,17 @@ export ZSH="$HOME/.oh-my-zsh"
 source "$HOME/oh-my-zsh/lib/detect-os.sh"
 OS_TYPE=$(detect_os)
 
+# Homebrew environment (macOS only, hardcoded to avoid spawning Ruby subprocess)
+if [[ "$OS_TYPE" == "macos" ]]; then
+  export HOMEBREW_PREFIX="/opt/homebrew"
+  export HOMEBREW_CELLAR="/opt/homebrew/Cellar"
+  export HOMEBREW_REPOSITORY="/opt/homebrew"
+  fpath[1,0]="/opt/homebrew/share/zsh/site-functions"
+  export PATH="/opt/homebrew/bin:/opt/homebrew/sbin:$PATH"
+  [ -z "${MANPATH-}" ] || export MANPATH=":${MANPATH#:}"
+  export INFOPATH="/opt/homebrew/share/info:${INFOPATH:-}"
+fi
+
 # Auto-launch tmux in Ghostty — exec replaces the shell process so no
 # extra zsh hangs around after tmux exits.
 if [[ "$TERM_PROGRAM" == "ghostty" && -z "$TMUX" ]]; then
@@ -86,6 +97,9 @@ DISABLE_UNTRACKED_FILES_DIRTY="true"
 # Add wisely, as too many plugins slow down shell startup.
 plugins=(colored-man-pages npm yarn zsh-better-npm-completion fzf-zsh)
 
+# Skip compaudit security check -- saves ~16ms per startup
+ZSH_DISABLE_COMPFIX=true
+
 source $ZSH/oh-my-zsh.sh
 
 # User configuration
@@ -142,7 +156,7 @@ fi
 
 # macOS: Check if copyq exists in PATH, alias to app bundle if not
 if [[ "$OS_TYPE" == "macos" ]]; then
-  if ! which copyq &>/dev/null; then
+  if ! command -v copyq &>/dev/null; then
     alias copyq="/Applications/CopyQ.app/Contents/MacOS/CopyQ"
   fi
 fi
@@ -178,20 +192,21 @@ export PATH="/usr/local/bin:$PATH"
 
 # Add RVM to PATH for scripting. Make sure this is the last PATH variable change.
 export PATH="$PATH:$HOME/.rvm/bin"
-export PATH="$(npm config get prefix)/bin:$PATH" # Add global npm packages to path
+
+# Lazy-load RVM: defer sourcing until first `rvm` call (~650ms saved per shell)
+if [[ -s "$HOME/.rvm/scripts/rvm" ]]; then
+  rvm() {
+    unfunction rvm
+    source "$HOME/.rvm/scripts/rvm"
+    rvm "$@"
+  }
+fi
 
 export EDITOR=nvim
 export VISUAL=nvim
 
-if [[ ! -f "$HOME/.temporary-global-envs.sh" ]]; then
-  touch "$HOME/.temporary-global-envs.sh"
-fi
-source "$HOME/.temporary-global-envs.sh"
-
-if [[ ! -f "$HOME/.secrets.sh" ]]; then
-  touch "$HOME/.secrets.sh"
-fi
-source "$HOME/.secrets.sh"
+[[ -f "$HOME/.temporary-global-envs.sh" ]] && source "$HOME/.temporary-global-envs.sh"
+[[ -f "$HOME/.secrets.sh" ]] && source "$HOME/.secrets.sh"
 
 # AsyncAPI CLI Autocomplete
 if [[ "$OS_TYPE" == "macos" ]]; then
@@ -202,8 +217,4 @@ if [[ "$OS_TYPE" == "linux" ]]; then
   ASYNCAPI_AC_ZSH_SETUP_PATH="$HOME/.cache/@asyncapi/cli/autocomplete/zsh_setup"
 fi
 
-if [[ -f "$ASYNCAPI_AC_ZSH_SETUP_PATH" ]]; then
-  source "$ASYNCAPI_AC_ZSH_SETUP_PATH"
-fi
-
-ASYNCAPI_AC_ZSH_SETUP_PATH=/Users/brunoagostini/Library/Caches/@asyncapi/cli/autocomplete/zsh_setup && test -f $ASYNCAPI_AC_ZSH_SETUP_PATH && source $ASYNCAPI_AC_ZSH_SETUP_PATH; # asyncapi autocomplete setup
+[[ -f "$ASYNCAPI_AC_ZSH_SETUP_PATH" ]] && source "$ASYNCAPI_AC_ZSH_SETUP_PATH"
