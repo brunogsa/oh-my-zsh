@@ -30,9 +30,9 @@ The `.zshrc` file contains numerous utility functions organized by purpose:
 ### AI Function Architecture
 
 The AI functions follow a consistent pattern:
-- Use OpenAI API (gpt-4o, o4-mini) as primary provider
-- Fallback to Anthropic Claude (claude-3-7-sonnet-latest) when OpenAI quota is exceeded
-- API keys stored in environment variables: `$OPENAI_API_KEY`, `$ANTHROPIC_API_KEY`
+- Use Anthropic API (claude-haiku-4-5) as primary provider
+- Fallback to OpenAI (o4-mini) when Anthropic quota is exceeded
+- API keys stored in environment variables: `$ANTHROPIC_API_KEY`, `$OPENAI_API_KEY`
 
 ## Development Commands
 
@@ -194,9 +194,9 @@ fi
 
 ### AI API Calls
 
-The `ai-request` function handles retries:
-1. Try OpenAI first
-2. On quota error, fallback to Anthropic
+The `ai-request` function handles provider fallback:
+1. Try Anthropic (Haiku 4.5) first
+2. On quota error (529), fallback to OpenAI (o4-mini)
 3. Return specific error messages for other failures
 
 ### Temporary Files
