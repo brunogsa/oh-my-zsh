@@ -25,7 +25,7 @@ The `.zshrc` file contains numerous utility functions organized by purpose:
 3. **Code Utilities**: `search-replace-vim`, `node-debug-reminder`
 4. **AI Integration**: `ai-request`, `ai-changelog`, `aigitcommit`, `aicmd`, `aiyank`, `aicopy`, `aiappend`
 5. **Git/Review Tools**: `vimreview`
-6. **AWS Integration**: `aws-get-cloudwatch-logs`
+6. **AWS Integration**: `aws-get-dlq-summary`
 
 ### AI Function Architecture
 
@@ -224,7 +224,7 @@ Key aliases to be aware of:
 Required for AI functions:
 - `OPENAI_API_KEY` - OpenAI API authentication
 - `ANTHROPIC_API_KEY` - Anthropic Claude API authentication
-- `AWS_PROFILE` - AWS profile for CloudWatch functions
+- `AWS_PROFILE` - AWS profile for AWS CLI functions
 - `EDITOR`, `VISUAL` - set to `nvim`
 
 ## Testing Utilities
