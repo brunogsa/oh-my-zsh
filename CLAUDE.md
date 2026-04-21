@@ -18,6 +18,8 @@ Untracked locals sourced by `.zshrc` if present:
 
 Idempotent; safe to re-run. Auto-detects OS (macOS/Linux). Ends with `exec zsh` so the terminal lands in the freshly configured shell.
 
+**Keep both OS branches in sync.** Every dependency, symlink, or system-setup change must update both the `$OS == "macos"` (brew) and `$OS == "linux"` (apt) branches in the same commit. Debian/Ubuntu sometimes renames binaries (e.g., `fd-find` ships as `fdfind`); symlink into `~/.local/bin/` to keep the binary name consistent with macOS.
+
 ## Performance Guard
 
 After any change to `.zshrc`, plugins, `commands/`, or `lib/`, run:
