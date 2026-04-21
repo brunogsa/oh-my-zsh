@@ -5,12 +5,10 @@ Cross-platform zsh configuration, CLI scripts, and shared shell libraries. The f
 ## Setup
 
 ```bash
-./init.sh    # Install zsh and oh-my-zsh
-./init2.sh   # Set zsh as default shell (requires reboot)
-./init3.sh   # Install themes, plugins, and dependencies
+./install.sh
 ```
 
-The scripts install zsh, oh-my-zsh, themes (powerlevel10k), plugins (zsh-autosuggestions, zsh-syntax-highlighting), and symlink `.zshrc` to `~/.zshrc`. All steps are idempotent.
+Installs zsh + oh-my-zsh, sets zsh as the default shell, installs themes (punctual) and plugins (fzf, fzf-zsh, zsh-better-npm-completion), symlinks `.zshrc` to `~/.zshrc`, and ends with `exec zsh` to drop the terminal into the configured shell. Idempotent; safe to re-run.
 
 ## Profiling
 

@@ -13,12 +13,10 @@ Untracked locals sourced by `.zshrc` if present:
 ## Setup
 
 ```bash
-./init.sh    # oh-my-zsh itself
-./init2.sh   # set zsh as default shell
-./init3.sh   # themes, plugins, dependencies
+./install.sh
 ```
 
-All auto-detect OS (macOS/Linux).
+Idempotent; safe to re-run. Auto-detects OS (macOS/Linux). Ends with `exec zsh` so the terminal lands in the freshly configured shell.
 
 ## Performance Guard
 
