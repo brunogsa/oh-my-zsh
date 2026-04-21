@@ -16,6 +16,11 @@ NON_GIT_MAX_DEPTH=4
 FD=(fd --hidden --follow --exclude .git --exclude node_modules --exclude vendor --exclude dist --exclude build --exclude .next --exclude out --exclude coverage --exclude .cache --exclude html)
 
 list_project_paths() {
+  if ! command -v fd >/dev/null 2>&1; then
+    echo "list-project-paths: 'fd' not found on PATH. Install via './install.sh' or 'apt install fd-find' / 'brew install fd'." >&2
+    return 1
+  fi
+
   local base_dir="${1:-$(pwd)}"
 
   to_relative_paths() {
@@ -29,8 +34,8 @@ for line in sys.stdin:
 
   local search_root
   if search_root=$(git -C "$base_dir" rev-parse --show-toplevel 2>/dev/null); then
-    "${FD[@]}" . "$search_root" 2>/dev/null | to_relative_paths
+    "${FD[@]}" . "$search_root" | to_relative_paths
   else
-    "${FD[@]}" --max-depth "$NON_GIT_MAX_DEPTH" . "$base_dir" 2>/dev/null | to_relative_paths
+    "${FD[@]}" --max-depth "$NON_GIT_MAX_DEPTH" . "$base_dir" | to_relative_paths
   fi
 }

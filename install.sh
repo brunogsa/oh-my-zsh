@@ -54,11 +54,14 @@ chsh -s "$(which zsh)"
 
 # OS-specific dependencies
 if [[ "$OS" == "macos" ]]; then
-    brew install coreutils
+    brew install coreutils fd
 fi
 
 if [[ "$OS" == "linux" ]]; then
-    sudo apt-get install -y silversearcher-ag
+    sudo apt-get install -y silversearcher-ag fd-find
+    # fd-find installs the binary as `fdfind` on Debian/Ubuntu; expose it as `fd`.
+    mkdir -p ~/.local/bin
+    ln -sf "$(command -v fdfind)" ~/.local/bin/fd
 fi
 
 # Set admin user home based on OS
