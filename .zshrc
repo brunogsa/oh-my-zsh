@@ -162,7 +162,6 @@ if [[ "$OS_TYPE" == "macos" ]]; then
 fi
 
 export FZF_CTRL_T_COMMAND="source ~/oh-my-zsh/lib/list-project-paths.sh && list_project_paths"
-[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
 # Override fzf Ctrl+T widget to pre-fill query with partial word at cursor
 fzf-file-widget() {
