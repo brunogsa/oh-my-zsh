@@ -13,7 +13,7 @@ if [[ "$OS" == "macos" ]]; then
 fi
 
 if [[ "$OS" == "linux" ]]; then
-    sudo apt-get update && sudo apt-get upgrade
+    sudo apt-get update && sudo apt-get upgrade -y
 fi
 
 # Install zsh
@@ -26,11 +26,11 @@ if [[ "$OS" == "linux" ]]; then
 fi
 
 # Install oh-my-zsh
-if [[ "$OS" == "macos" ]]; then
+if [ -d "$HOME/.oh-my-zsh" ]; then
+    echo "oh-my-zsh already installed, skipping"
+elif [[ "$OS" == "macos" ]]; then
     sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
-fi
-
-if [[ "$OS" == "linux" ]]; then
+elif [[ "$OS" == "linux" ]]; then
     wget https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh
     sudo chmod +x install.sh
     ./install.sh

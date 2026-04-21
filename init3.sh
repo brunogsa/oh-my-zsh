@@ -35,20 +35,22 @@ touch ~/.secrets.sh
 touch ~/.temporary-global-envs.sh
 
 # Themes
-wget https://raw.githubusercontent.com/dannynimmo/punctual-zsh-theme/v0.1.0/punctual.zsh-theme
-mv -f punctual.zsh-theme ~/.oh-my-zsh/themes/
+if [ ! -f ~/.oh-my-zsh/themes/punctual.zsh-theme ]; then
+    wget -O ~/.oh-my-zsh/themes/punctual.zsh-theme https://raw.githubusercontent.com/dannynimmo/punctual-zsh-theme/v0.1.0/punctual.zsh-theme
+fi
 
-# Plugin
-sudo rm -fr ~/.oh-my-zsh/custom/plugins/*
+# Plugins
+if [ ! -d ~/.oh-my-zsh/custom/plugins/zsh-better-npm-completion ]; then
+    git clone https://github.com/lukechilds/zsh-better-npm-completion ~/.oh-my-zsh/custom/plugins/zsh-better-npm-completion
+fi
 
-git clone https://github.com/lukechilds/zsh-better-npm-completion
-mv -f zsh-better-npm-completion ~/.oh-my-zsh/custom/plugins/
+if [ ! -d ~/.oh-my-zsh/custom/plugins/fzf ]; then
+    git clone https://github.com/junegunn/fzf.git ~/.oh-my-zsh/custom/plugins/fzf
+    ~/.oh-my-zsh/custom/plugins/fzf/install --bin
+fi
 
-git clone https://github.com/junegunn/fzf.git
-mv -f fzf ~/.oh-my-zsh/custom/plugins/
-~/.oh-my-zsh/custom/plugins/fzf/install --bin
+if [ ! -d ~/.oh-my-zsh/custom/plugins/fzf-zsh ]; then
+    git clone https://github.com/Treri/fzf-zsh.git ~/.oh-my-zsh/custom/plugins/fzf-zsh
+fi
 
-git clone https://github.com/Treri/fzf-zsh.git
-mv -f fzf-zsh ~/.oh-my-zsh/custom/plugins/
-
-sudo reboot
+exec zsh

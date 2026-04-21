@@ -14,7 +14,7 @@ Untracked locals sourced by `.zshrc` if present:
 
 ```bash
 ./init.sh    # oh-my-zsh itself
-./init2.sh   # set zsh as default shell (requires reboot)
+./init2.sh   # set zsh as default shell
 ./init3.sh   # themes, plugins, dependencies
 ```
 
