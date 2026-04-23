@@ -1,6 +1,13 @@
 #!/bin/bash
 set -e
 
+# Public-repo clones below don't need auth, but on macOS the git-credential-osxkeychain
+# helper configured in /opt/homebrew/etc/gitconfig pops up a login-keychain dialog
+# whenever a github.com fetch fails (e.g. a deprecated tap returning 404). Skip the
+# system-level gitconfig so no helper is ever invoked, and block interactive prompts.
+export GIT_CONFIG_NOSYSTEM=1
+export GIT_TERMINAL_PROMPT=0
+
 # shellcheck source=/dev/null
 source ~/oh-my-zsh/lib/detect-os.sh
 
@@ -13,6 +20,9 @@ echo "Detected OS: $OS"
 
 # Update package manager
 if [[ "$OS" == "macos" ]]; then
+    # homebrew/cask-fonts was deprecated in May 2024 and merged into homebrew/cask.
+    # A stale tap makes `brew update` fail and triggers a keychain credential prompt.
+    brew untap homebrew/cask-fonts 2>/dev/null || true
     brew update
 fi
 
@@ -45,8 +55,20 @@ fi
 # Stage 2: set zsh as default shell
 # ─────────────────────────────────────────────────────────────────────────────
 
-sudo chsh -s "$(which zsh)"
-chsh -s "$(which zsh)"
+# chsh always prompts for a password even when the target shell equals the
+# current one, so guard against unnecessary prompts on re-runs.
+ZSH_PATH="$(which zsh)"
+if [[ "$OS" == "macos" ]]; then
+    CURRENT_SHELL="$(dscl . -read ~/ UserShell | awk '{print $2}')"
+elif [[ "$OS" == "linux" ]]; then
+    CURRENT_SHELL="$(getent passwd "$USER" | cut -d: -f7)"
+fi
+
+if [ "$CURRENT_SHELL" != "$ZSH_PATH" ]; then
+    chsh -s "$ZSH_PATH"
+else
+    echo "zsh is already the login shell, skipping chsh"
+fi
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Stage 3: themes, plugins, dependencies
@@ -64,22 +86,8 @@ if [[ "$OS" == "linux" ]]; then
     ln -sf "$(command -v fdfind)" ~/.local/bin/fd
 fi
 
-# Set admin user home based on OS
-if [[ "$OS" == "macos" ]]; then
-    ADMIN_HOME="/Users/admin"
-fi
-
-if [[ "$OS" == "linux" ]]; then
-    ADMIN_HOME="/root"
-fi
-
 # Link user configs
 ln -sf ~/oh-my-zsh/.zshrc ~/.zshrc
-
-# Create and link admin/root configs
-sudo mkdir -p ~/.oh-my-zsh "$ADMIN_HOME"
-sudo ln -sf ~/.oh-my-zsh "$ADMIN_HOME/.oh-my-zsh"
-sudo ln -sf ~/oh-my-zsh/.zshrc "$ADMIN_HOME/.zshrc"
 
 touch ~/.secrets.sh
 touch ~/.temporary-global-envs.sh
@@ -103,4 +111,5 @@ if [ ! -d ~/.oh-my-zsh/custom/plugins/fzf-zsh ]; then
     git clone https://github.com/Treri/fzf-zsh.git ~/.oh-my-zsh/custom/plugins/fzf-zsh
 fi
 
+echo "install.sh finished successfully — launching fresh zsh session"
 exec zsh
