@@ -175,8 +175,6 @@ fzf-file-widget() {
 }
 zle -N fzf-file-widget
 
-export PATH="$HOME/.local/bin:$PATH"
-
 # Deno
 export DENO_INSTALL="$HOME/.deno"
 export PATH="$DENO_INSTALL/bin:$PATH"
@@ -188,6 +186,9 @@ export AWS_PAGER=""
 # Add node global binaries to PATH
 # Prioritize n-managed Node over Homebrew
 export PATH="/usr/local/bin:$PATH"
+
+# Native installers (Claude Code, etc.) — must win over /usr/local/bin
+export PATH="$HOME/.local/bin:$PATH"
 
 # Add RVM to PATH for scripting. Make sure this is the last PATH variable change.
 export PATH="$PATH:$HOME/.rvm/bin"
