@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+# md-to-html — render a markdown file to ONE self-contained HTML file.
+#
+# A dumb converter: Markdown stays the source of truth; this is a build step.
+# Output has ZERO external references — CSS inlined, diagrams as JS-free SVG, images base64.
+#
+# Cross-OS (macOS + Ubuntu/Xubuntu): no `sed -i` (BSD vs GNU differ); `mktemp -d` /
+# `command -v` behave the same; puppeteer `--no-sandbox` is needed on Linux, harmless on macOS.
+#
+# Usage: md-to-html <input.md> [output.html]   (default output = input path with .html)
+set -euo pipefail
+
+usage() { echo "usage: md-to-html <input.md> [output.html]" >&2; exit 2; }
+[ $# -ge 1 ] || usage
+IN="$1"
+[ -f "$IN" ] || { echo "md-to-html: input not found: $IN" >&2; exit 1; }
+OUT="${2:-${IN%.*}.html}"
+
+need() { command -v "$1" >/dev/null 2>&1 || { echo "md-to-html: missing '$1' ($2)" >&2; exit 1; }; }
+need pandoc "brew install pandoc  |  apt install pandoc"
+
+WORK="$(mktemp -d)"
+trap 'rm -rf "$WORK"' EXIT
+SRC="$IN"
+
+# --- step 1: mermaid fences -> inline SVG, ONLY if the doc has any ---
+# htmlLabels:false makes labels SVG-native <text> (not <foreignObject>), which would
+# otherwise clip to "truncated text" when the SVG scales to fit width.
+if grep -q '^```mermaid' "$IN"; then
+  need mmdc "npm i -g @mermaid-js/mermaid-cli"
+  printf '{ "args": ["--no-sandbox"] }\n' > "$WORK/puppeteer.json"
+  printf '{ "flowchart": { "htmlLabels": false } }\n' > "$WORK/mermaid.json"
+  mmdc -i "$IN" -o "$WORK/processed.md" -e svg -b transparent \
+       -c "$WORK/mermaid.json" -p "$WORK/puppeteer.json" >/dev/null
+  SRC="$WORK/processed.md"
+fi
+
+# --- step 2: embedded stylesheet (system fonts, readable measure) ---
+cat > "$WORK/style.css" <<'CSS'
+:root { --fg:#1a1a1a; --muted:#666; --accent:#0071e3; --border:#e2e2e2; }
+body { font-family:-apple-system,system-ui,"Segoe UI",Roboto,sans-serif;
+       color:var(--fg); line-height:1.6; max-width:820px; margin:40px auto; padding:0 20px; }
+h1,h2,h3,h4 { line-height:1.25; }
+h1 { font-size:2rem; }
+h2 { border-bottom:2px solid var(--border); padding-bottom:.3em; margin-top:1.8em; }
+h4 { margin-bottom:.2em; }
+table { border-collapse:collapse; width:100%; margin:1em 0; }
+th,td { border:1px solid var(--border); padding:6px 10px; text-align:left; }
+th { background:#f6f6f6; }
+code { background:#f3f3f3; padding:.1em .3em; border-radius:3px; font-size:.9em; }
+pre code { display:block; padding:12px; overflow-x:auto; }
+a { color:var(--accent); }
+img,svg { max-width:100%; height:auto; }
+hr { border:none; border-top:1px solid var(--border); margin:2em 0; }
+CSS
+
+# --- step 3: neutralize bare `---` section dividers ---
+# spec/plan docs use bare `---` dividers; pandoc reads `---`...`---` as YAML metadata
+# blocks and silently DROPS the content between pairs. Rewrite each to `***` (an
+# unambiguous horizontal rule) so dividers still render and no section is lost.
+awk '{ if ($0 == "---") print "***"; else print }' "$SRC" > "$WORK/final.md"
+
+# --- step 4: one self-contained file ---
+# Run pandoc with CWD=WORK so the relative image refs mmdc wrote (`./processed-N.svg`)
+# resolve to WORK — NOT to the caller's CWD, where a stale `processed-N.svg` could shadow them.
+case "$OUT" in /*) OUT_ABS="$OUT" ;; *) OUT_ABS="$PWD/$OUT" ;; esac
+TITLE="$(basename "${IN%.*}")"
+( cd "$WORK" && pandoc final.md \
+    --standalone --embed-resources \
+    --metadata title="$TITLE" \
+    --css style.css \
+    -o "$OUT_ABS" )
+
+echo "wrote: $OUT"

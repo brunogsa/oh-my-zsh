@@ -76,11 +76,11 @@ fi
 
 # OS-specific dependencies
 if [[ "$OS" == "macos" ]]; then
-    brew install coreutils fd
+    brew install coreutils fd pandoc
 fi
 
 if [[ "$OS" == "linux" ]]; then
-    sudo apt-get install -y silversearcher-ag fd-find
+    sudo apt-get install -y silversearcher-ag fd-find pandoc
     # fd-find installs the binary as `fdfind` on Debian/Ubuntu; expose it as `fd`.
     mkdir -p ~/.local/bin
     ln -sf "$(command -v fdfind)" ~/.local/bin/fd
@@ -88,6 +88,13 @@ fi
 
 # Link user configs
 ln -sf ~/oh-my-zsh/.zshrc ~/.zshrc
+
+# Expose bin/ executables on PATH.
+# md-to-html: markdown -> single-file HTML (also used by the neovim <leader>vM keybind).
+# Needs pandoc (installed above) and, for docs with mermaid, mmdc (@mermaid-js/mermaid-cli).
+mkdir -p ~/.local/bin
+chmod +x ~/oh-my-zsh/bin/md-to-html
+ln -sf ~/oh-my-zsh/bin/md-to-html ~/.local/bin/md-to-html
 
 touch ~/.secrets.sh
 touch ~/.temporary-global-envs.sh
